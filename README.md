@@ -1,0 +1,1 @@
+# Case-Tecnico-Dev-Full-Stack-The-News
