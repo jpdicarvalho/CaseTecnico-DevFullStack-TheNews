@@ -1,15 +1,14 @@
 import { Hono } from 'hono';
+import { sign } from "hono/jwt";
 
 type Env = {
 	Bindings: {
 	  DB: D1Database;
+	  JWT_SECRET: string;
 	};
   };
 
 export const app = new Hono<Env>();
-
-// Rota para verificar se a API está rodando
-//app.get('/', (c) => c.text('API The News - Gamificação 🚀'));
 
 // Webhook para registrar abertura de newsletter
 app.get('/', async (c) => {
@@ -71,9 +70,44 @@ app.get('/', async (c) => {
 	  console.error("Erro ao processar webhook:", error);
 	  return c.json({ error: "Erro interno ao processar webhook" }, 500);
 	}
-  });
+});
+
+// Rota para login via e-mail (sem senha)
+app.post("/auth/login", async (c) => {
+	try {
+	  const { email } = await c.req.json();
+	  if (!email) {
+		return c.json({ error: "O e-mail é obrigatório!" }, 400);
+	  }
   
-   
+	  const db = c.env.DB;
+  
+	  type User = {
+		id: string;
+		email: string;
+	  };
+  
+	  // Verifica se o usuário já existe (caso contrário, retorna erro)
+	  const user = await db.prepare("SELECT id, email FROM users WHERE email = ?").bind(email).first<User>();
+  
+	  if (!user) {
+		return c.json({ error: "Usuário não encontrado! Certifique-se de que abriu a newsletter pelo menos uma vez." }, 404);
+	  }
+  
+	  // Gera um token JWT para autenticação
+	  const token = await sign({ userId: user.id, email: user.email }, c.env.JWT_SECRET);
+  
+	  return c.json({
+		message: "Login bem-sucedido!",
+		token,
+		user: { email: user.email },
+	  }, 200);
+
+	} catch (error) {
+	  console.error("Erro ao processar login:", error);
+	  return c.json({ error: "Erro interno ao processar login" }, 500);
+	}
+});
 
 // Rota para buscar estatísticas do usuário
 app.get('/user/:email', async (c) => {

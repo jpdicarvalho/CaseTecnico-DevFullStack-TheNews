@@ -8,15 +8,17 @@ function Login() {
         <div className='main center'>
             <div className='img__box center'>
                     <img className='img__logo' src={LogoTheNews} alt="" />
+                    
             </div>
 
-            <div className='tittle__login'>
-                <h3 className=''>The News</h3>
-                <p className=''>Faça login e confira as melhores noticias...</p>
+            <div className='text__container'>
+                <p className='name__plataform'>The News</p>
+                <p className='text__span'>Tudo que você precisa saber a um clique de você. Faça login e confira!</p>
+                
             </div>
 
             <div className="input-container">
-                <input placeholder="Email Address" type="email" required/>
+                <input placeholder="Entre com seu e-mail" type="email" required/>
                 <button className="invite-btn" type="button">
                     Entrar
                 </button>
@@ -24,7 +26,7 @@ function Login() {
         </div>
 
         <div className='footer'>
-            <p>Não tem uma conta? Cadastrar</p>
+            <p>Ainda não tem uma conta? Crie a sua agora.</p>
         </div>
     </div>
   );
