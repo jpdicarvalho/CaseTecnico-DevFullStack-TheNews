@@ -75,39 +75,37 @@ app.get('/', async (c) => {
 // Rota para login via e-mail (sem senha)
 app.post("/auth/login", async (c) => {
 	try {
-	  const { email } = await c.req.json();
-	  if (!email) {
-		return c.json({ error: "O e-mail é obrigatório!" }, 400);
+	  const { email } = await c.req.json().catch(() => ({}));
+  
+	  if (!email || typeof email !== "string") {
+		return c.json({ error: "O e-mail é obrigatório e deve ser uma string válida." }, 400);
 	  }
   
+	  const normalizedEmail = email.trim().toLowerCase();
 	  const db = c.env.DB;
   
-	  type User = {
-		id: string;
-		email: string;
-	  };
-  
-	  // Verifica se o usuário já existe (caso contrário, retorna erro)
-	  const user = await db.prepare("SELECT id, email FROM users WHERE email = ?").bind(email).first<User>();
+	  // Verifica se o usuário existe no banco
+	  const user = await db.prepare("SELECT id FROM users WHERE email = ?").bind(normalizedEmail).first<{ id: string }>();
   
 	  if (!user) {
 		return c.json({ error: "Usuário não encontrado! Certifique-se de que abriu a newsletter pelo menos uma vez." }, 404);
 	  }
   
-	  // Gera um token JWT para autenticação
-	  const token = await sign({ userId: user.id, email: user.email }, c.env.JWT_SECRET);
+	  // Verifica se a chave secreta JWT está definida
+	  if (!c.env.JWT_SECRET) {
+		console.error("⚠️ ERRO: JWT_SECRET não está configurado no ambiente!");
+		return c.json({ error: "Erro interno de autenticação. Tente novamente mais tarde." }, 500);
+	  }
   
-	  return c.json({
-		message: "Login bem-sucedido!",
-		token,
-		user: { email: user.email },
-	  }, 200);
-
+	  // Gera o token JWT
+	  const token = await sign({ userId: user.id, email: normalizedEmail }, c.env.JWT_SECRET);
+  
+	  return c.json({ message: "Login bem-sucedido!", token }, 200);
 	} catch (error) {
 	  console.error("Erro ao processar login:", error);
 	  return c.json({ error: "Erro interno ao processar login" }, 500);
 	}
-});
+  });
 
 // Rota para buscar estatísticas do usuário
 app.get('/user/:email', async (c) => {
