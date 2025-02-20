@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { sign } from "hono/jwt";
-import { authMiddleware } from "./auth.middleware";
+//import { authMiddleware } from "./auth.middleware";
 
 type Env = {
   Bindings: {
@@ -87,7 +87,7 @@ app.post("/auth/login", async (c) => {
 });
 
 // Buscar estatísticas do usuário (Rota protegida)
-app.get("/user", authMiddleware, async (c) => {
+app.get("/user", async (c) => {
   try {
     const user = c.get("jwtPayload") as { userId: string; email: string };
 
@@ -114,6 +114,43 @@ app.get("/user", authMiddleware, async (c) => {
   } catch (error) {
     console.error("Erro ao buscar estatísticas do usuário:", error);
     return c.json({ error: "Erro interno ao buscar estatísticas do usuário" }, 500);
+  }
+});
+
+app.get("/streak", async (c) => {
+  try {
+    // Obtém o usuário autenticado
+    const user = c.get("jwtPayload") as { userId: string; email: string };
+
+    if (!user) {
+      return c.json({ error: "Usuário não autenticado" }, 401);
+    }
+
+    const db = c.env.DB;
+
+    // Busca o streak e o histórico de aberturas do usuário
+    const userData = await db.prepare(
+      "SELECT streak, last_opened FROM users WHERE id = ?"
+    ).bind(user.userId).first<{ streak: number; last_opened: string | null }>();
+
+    if (!userData) {
+      return c.json({ error: "Usuário não encontrado." }, 404);
+    }
+
+    // Busca o histórico de aberturas do usuário
+    const historyResult = await db.prepare(
+      "SELECT opened_at FROM newsletters WHERE user_id = ? ORDER BY opened_at DESC"
+    ).bind(user.userId).all<{ opened_at: string }>();
+
+    return c.json({
+      email: user.email,
+      streak: userData.streak,
+      lastOpened: userData.last_opened,
+      history: historyResult.results?.map(entry => entry.opened_at) ?? [],
+    });
+  } catch (error) {
+    console.error("Erro ao buscar streak:", error);
+    return c.json({ error: "Erro interno ao buscar streak do usuário" }, 500);
   }
 });
 
