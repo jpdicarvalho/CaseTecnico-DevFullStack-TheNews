@@ -90,26 +90,25 @@ app.post("/auth/login", async (c) => {
 app.get("/user", authMiddleware, async (c) => {
   try {
     const user = c.get("jwtPayload") as { userId: string; email: string };
-
-    if (!user) {
-      return c.json({ error: "Usuário não autenticado" }, 401);
-    }
+    if (!user) return c.json({ error: "Usuário não autenticado" }, 401);
 
     const db = c.env.DB;
-    const userData = await db.prepare("SELECT email, streak, last_opened FROM users WHERE id = ?").bind(user.userId).first<{ email: string; streak: number; last_opened: string | null }>();
+    const userData = await db.prepare(
+      "SELECT email, streak, last_opened FROM users WHERE id = ?"
+    ).bind(user.userId).first<{ email: string; streak: number; last_opened: string | null }>();
 
-    if (!userData) {
-      return c.json({ error: "Usuário não encontrado." }, 404);
-    }
+    if (!userData) return c.json({ error: "Usuário não encontrado." }, 404);
 
-    const historyResult = await db.prepare("SELECT opened_at FROM newsletters WHERE user_id = ? ORDER BY opened_at DESC")
-      .bind(user.userId).all<{ opened_at: string }>();
+    const historyResult = await db.prepare(
+      "SELECT opened_at FROM newsletters WHERE user_id = ? ORDER BY opened_at DESC"
+    ).bind(user.userId).all<{ opened_at: string }>();
 
     return c.json({
       email: user.email,
       streak: userData.streak,
       lastOpened: userData.last_opened,
       history: historyResult.results?.map(entry => entry.opened_at) ?? [],
+      message: getMotivationalMessage(userData.streak) // Nova mensagem motivacional
     });
   } catch (error) {
     console.error("Erro ao buscar estatísticas do usuário:", error);
