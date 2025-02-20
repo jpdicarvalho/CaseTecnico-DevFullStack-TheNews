@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { sign } from "hono/jwt";
-//import { authMiddleware } from "./auth.middleware";
+import { authMiddleware } from "./auth.middleware";
 
 type Env = {
   Bindings: {
@@ -87,7 +87,7 @@ app.post("/auth/login", async (c) => {
 });
 
 // Buscar estatísticas do usuário (Rota protegida)
-app.get("/user", async (c) => {
+app.get("/user", authMiddleware, async (c) => {
   try {
     const user = c.get("jwtPayload") as { userId: string; email: string };
 
@@ -117,7 +117,7 @@ app.get("/user", async (c) => {
   }
 });
 
-app.get("/streak", async (c) => {
+app.get("/streak", authMiddleware, async (c) => {
   try {
     // Obtém o usuário autenticado
     const user = c.get("jwtPayload") as { userId: string; email: string };
@@ -160,6 +160,14 @@ function checkIfConsecutive(lastOpened: string | null, today: Date): boolean {
   const lastDate = new Date(lastOpened);
   const difference = (today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24);
   return difference === 1;
+}
+
+function getMotivationalMessage(streak: number): string {
+  if (streak === 0) return "Comece hoje e mantenha sua sequência!";
+  if (streak < 3) return "Ótimo começo! Continue assim!";
+  if (streak < 7) return "Você está indo bem! Uma semana de conquistas!";
+  if (streak < 14) return "Incrível! Duas semanas seguidas!";
+  return "Você é uma lenda! Continue firme!";
 }
 
 export default app;

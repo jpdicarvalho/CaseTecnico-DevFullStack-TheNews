@@ -13,7 +13,7 @@ export const authMiddleware = async (c: Context, next: Next) => {
 
     // Verifica se o token existe no banco
     const sessionResult = await db.prepare(
-      "SELECT user_id, email, expires_at FROM sessions WHERE token = ?"
+      "SELECT user_id, expires_at FROM sessions WHERE token = ?"
     ).bind(token).first();
 
     const session = sessionResult as { user_id: string; email: string; expires_at: string } | null;
