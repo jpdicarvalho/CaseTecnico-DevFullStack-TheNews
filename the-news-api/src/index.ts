@@ -11,7 +11,7 @@ type Env = {
 
 export const app = new Hono<Env>();
 
-// 📨 Webhook para registrar abertura de newsletter
+// Webhook para registrar abertura de newsletter
 app.get("/", async (c) => {
   try {
     const email = c.req.query("email");
@@ -56,7 +56,7 @@ app.get("/", async (c) => {
   }
 });
 
-// 🔐 Login via e-mail (sem senha)
+// Login via e-mail (sem senha)
 app.post("/auth/login", async (c) => {
   try {
     const { email } = await c.req.json();
@@ -86,7 +86,7 @@ app.post("/auth/login", async (c) => {
   }
 });
 
-// 🔎 Buscar estatísticas do usuário (Rota protegida)
+// Buscar estatísticas do usuário (Rota protegida)
 app.get("/user", authMiddleware, async (c) => {
   try {
     const user = c.get("jwtPayload") as { userId: string; email: string };
@@ -117,7 +117,7 @@ app.get("/user", authMiddleware, async (c) => {
   }
 });
 
-// 🛠 Função utilitária para verificar streak consecutivo
+// Função utilitária para verificar streak consecutivo
 function checkIfConsecutive(lastOpened: string | null, today: Date): boolean {
   if (!lastOpened) return false;
   const lastDate = new Date(lastOpened);
