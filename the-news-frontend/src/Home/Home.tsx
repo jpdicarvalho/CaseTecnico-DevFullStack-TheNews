@@ -4,7 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import LogoTheNews from '../image.png';
 import Loader from '../Loader/Loader';
+import { CiLogout } from "react-icons/ci";
+import { FcFlashOn } from "react-icons/fc";
 
+import { FaUserCircle } from "react-icons/fa";
+import raio from '../raio.png'
 import './Home.css';
 
 function Home() {
@@ -17,28 +21,42 @@ function Home() {
     return (
         <>
             <div className='header__home'>
-                    <div>user</div>
-                    <div>LOGUT</div>
-                </div>
-            <div className='main center'>
+                <FaUserCircle className='icons__headers'/>
+            </div>
+
+            <div className='main__home center'>
                 
                 <div className='img__box center'>
-                        <img className='img__logo' src={LogoTheNews} alt="" />
+                    <img className='img__logo' src={LogoTheNews} alt="" />
                 </div>
 
                 <div className='text__container'>
-                    <p className='name__plataform'>The News</p>
-                    <p className='text__span'>Todos os dados e históricos de suas leituras a um clique de você. Faça login e confira!</p>
+                    <p className='name__plataform__home'>the news</p>
                 </div>
 
-                {message && (
-                    <p className='message'>{message}</p>
-                )}
+                <div className='streak__container'>
+                    <div>
+                        <h1>
+                            1
+                        </h1>
+                        <h2>
+                            Dia de leitura
+                        </h2>
+                    </div>
+                    <div className='box__img__raio'>
+                        <img className='img__raio' src={raio} alt="" />
+                    </div>
 
+                </div>
+
+                <div className='menssagem'>
+                    <p>Seu primeiro dia de leitura, continue assim!!</p>
+                </div>
+
+                <div className='history__'>
+                    <p>Histório</p>
+                </div>
                
-            </div>
-            <div className='footer'>
-                <p>Ainda não tem uma conta? Crie a sua agora.</p>
             </div>
         </>
     );
