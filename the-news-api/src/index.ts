@@ -1,14 +1,16 @@
 import { Hono } from 'hono';
 import { sign } from "hono/jwt";
+import { authMiddleware } from "./authMiddleware";
 
 type Env = {
 	Bindings: {
 	  DB: D1Database;
 	  JWT_SECRET: string;
 	};
-  };
+};
 
 export const app = new Hono<Env>();
+
 
 // Webhook para registrar abertura de newsletter
 app.get('/', async (c) => {
@@ -84,29 +86,36 @@ app.post("/auth/login", async (c) => {
 	  const normalizedEmail = email.trim().toLowerCase();
 	  const db = c.env.DB;
   
-	  // Verifica se o usuário existe no banco
+	  // Verifica se o usuário existe
 	  const user = await db.prepare("SELECT id FROM users WHERE email = ?").bind(normalizedEmail).first<{ id: string }>();
   
 	  if (!user) {
 		return c.json({ error: "Usuário não encontrado! Certifique-se de que abriu a newsletter pelo menos uma vez." }, 404);
 	  }
   
-	  // Verifica se a chave secreta JWT está definida
-	  if (!c.env.JWT_SECRET) {
-		console.error("⚠️ ERRO: JWT_SECRET não está configurado no ambiente!");
-		return c.json({ error: "Erro interno de autenticação. Tente novamente mais tarde." }, 500);
-	  }
+	  // Define validade do token (4 horas)
+	  const expiresIn = 4 * 60 * 60; // 4 horas em segundos
+	  const expiresAt = new Date(Date.now() + expiresIn * 1000).toISOString();
   
-	  // Gera o token JWT
-	  const token = await sign({ userId: user.id, email: normalizedEmail }, c.env.JWT_SECRET);
+	  // Gera Token JWT
+	  const token = await sign({ userId: user.id, email: normalizedEmail, exp: Math.floor(Date.now() / 1000) + expiresIn }, c.env.JWT_SECRET);
   
-	  return c.json({ message: "Login bem-sucedido!", token }, 200);
+	  // Salva a sessão no banco (se já existir, atualiza)
+	  await db.prepare(`
+		INSERT INTO sessions (user_id, token, expires_at) 
+		VALUES (?, ?, ?) 
+		ON CONFLICT(user_id) 
+		DO UPDATE SET token = excluded.token, expires_at = excluded.expires_at
+	  `).bind(user.id, token, expiresAt).run();
+  
+	  return c.json({ message: "Login bem-sucedido!", token, expiresAt }, 200);
 	} catch (error) {
 	  console.error("Erro ao processar login:", error);
 	  return c.json({ error: "Erro interno ao processar login" }, 500);
 	}
-  });
+});
 
+// Rota para obter a  
 // Rota para buscar estatísticas do usuário
 app.get('/user/:email', async (c) => {
   const email = c.req.param('email');
