@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import LogoTheNews from './image.png';
+import LogoTheNews from '../image.png';
 import Loader from '../Loader/Loader';
 
 import './Login.css';
@@ -26,19 +26,19 @@ function Login() {
             localStorage.setItem('token', res.data.token);
             localStorage.setItem('userData', JSON.stringify(res.data));
 
-            setIsLoading(false)
-
             setTimeout(() => {
-                setMessage(false);
+                setIsLoading(false)
                 navigate('/Home');
             }, 2000);
 
         }).catch(err => {
             console.log(err)
+            
             setIsLoading(false)
             setMessage(err.response.data.message);
+
             setTimeout(() => {
-              setMessage(false);
+                setMessage(false);
             }, 3000);
           })
     }
@@ -55,7 +55,7 @@ function Login() {
                 </div>
 
                 {message && (
-                    <p>{message}</p>
+                    <p className='message'>{message}</p>
                 )}
 
                 {isLoading ? (

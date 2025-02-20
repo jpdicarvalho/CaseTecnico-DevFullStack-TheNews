@@ -1,0 +1,5 @@
+.header__home{
+    background: red;
+    display: flex;
+    justify-content: end;
+}

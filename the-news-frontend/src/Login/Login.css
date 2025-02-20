@@ -37,6 +37,15 @@
   font-size: 14px;
   margin-bottom: 30px;
 }
+
+.message{
+  background: rgba(128, 128, 128, 0.238);
+  font-size: 12px;
+  padding: 5px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  
+}
 /* From Uiverse.io by Yaya12085 */ 
 .input-container {
     position: relative;
