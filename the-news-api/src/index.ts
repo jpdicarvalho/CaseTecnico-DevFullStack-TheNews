@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 import { sign } from "hono/jwt";
 import { authMiddleware } from "./auth.middleware";
 
@@ -10,6 +11,15 @@ type Env = {
 };
 
 export const app = new Hono<Env>();
+
+app.use(
+  "*",
+  cors({
+    origin: "http://localhost:5173",
+    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowHeaders: ["Authorization", "Content-Type"],
+  })
+);
 
 // Webhook para registrar abertura de newsletter
 app.get("/", async (c) => {
@@ -60,15 +70,16 @@ app.get("/", async (c) => {
 app.post("/auth/login", async (c) => {
   try {
     const { email } = await c.req.json();
+    console.log(email)
     if (!email || typeof email !== "string") {
-      return c.json({ error: "O e-mail é obrigatório e deve ser uma string válida." }, 400);
+      return c.json({ message: "O e-mail é obrigatório e deve ser uma string válida." }, 400);
     }
 
     const db = c.env.DB;
     const user = await db.prepare("SELECT id FROM users WHERE email = ?").bind(email).first<{ id: string }>();
 
     if (!user) {
-      return c.json({ error: "Usuário não encontrado! Certifique-se de que abriu a newsletter pelo menos uma vez." }, 404);
+      return c.json({ message: "Hummm... Parece que você ainda não abriu nehuma newsletter." }, 404);
     }
 
     const expiresIn = 4 * 60 * 60; // 4 horas
