@@ -2,13 +2,13 @@
 
 ## 📌 Introdução
 
-Este projeto foi desenvolvido para aumentar o engajamento dos leitores da newsletter **The News** através da **gamificação**. Inspirado no **Duolingo**, criamos um sistema que premia leitores que mantêm uma **sequência de aberturas** das newsletters, incentivando a interação contínua com os conteúdos enviados regularmente.
+Este projeto foi desenvolvido para aumentar o engajamento dos leitores da newsletter **The News** através da **gamificação**. Inspirado no **Duolingo**, foi criado um sistema que premia leitores que mantêm uma **sequência de aberturas** das newsletters, incentivando a interação contínua com os conteúdos enviados regularmente.
 
 ---
 
 ## 🎯 Objetivo do Projeto
 
-Criamos uma plataforma web funcional que permite aos leitores acompanharem suas estatísticas e streaks, enquanto a equipe da Waffle pode visualizar insights estratégicos sobre o engajamento dos usuários. 
+Criar uma plataforma web funcional que permite aos leitores acompanharem suas estatísticas e streaks, enquanto a equipe da Waffle pode visualizar insights estratégicos sobre o engajamento dos usuários. 
 
 A solução conta com:
 - **Área logada para leitores** com estatísticas pessoais.
@@ -86,7 +86,7 @@ O **FETCH GET** do webhook ocorre a cada 1 hora, processando os seguintes dados:
 
 1️⃣ **Repositório GitHub (privado)**
    - Código-fonte documentado.
-   - Enviado para `geraldo.mazzini@waffle.com.br`.
+   - Enviado para `***le.com.br`.
 
 2️⃣ **Demo funcional**
    - [Link para o ambiente online](https://demo.thenewsapp.com)
