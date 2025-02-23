@@ -84,17 +84,31 @@ const filteringPeriod = [
     { value: 720, label: "Últimos 30 dias" },
 ];
 
+const filteringStatus = [
+  { value: 'Ativo', label: "Streaks ativos" },
+  { value: 'Inativo', label: "Streaks inativos" }
+];
+
   const Dashboard = () => {
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [selectedPeriod, setSelectedPeriod] = useState<number | null>(null);
-    const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
+    const [dropdownPeriodOpen, setDropdownPeriodOpen] = useState<boolean>(false);
+    const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
+    const [dropdownStatusOpen, setDropdownStatusOpen] = useState<boolean>(false);
+
+    const handleStatusChange = (value: string) => {
+      setSelectedStatus(value);
+      setDropdownStatusOpen(false); // Fecha o dropdown após selecionar
+      console.log("Status selecionado:", value);
+    };
 
     const handlePeriodChange = (value: number) => {
       setSelectedPeriod(value);
-      setDropdownOpen(false); // Fecha o dropdown após selecionar
+      setDropdownPeriodOpen(false); // Fecha o dropdown após selecionar
       console.log("Período selecionado:", value);
     };
+
     //const [error, setError] = useState("");
   
     useEffect(() => {
@@ -155,12 +169,26 @@ const filteringPeriod = [
             </div>
 
             <div className='section__filter'>
-              <div className='inner__filter'>
+              <div className='inner__filter' onClick={() => setDropdownStatusOpen(!dropdownStatusOpen)}>
                 <IoFlashOutline className='icon__filter'/>
-                <input type="text" className='input__filter' placeholder='Status do Streak'/>
+                <input
+                  type="text"
+                  className="input__filter"
+                  placeholder={selectedStatus ? filteringStatus.find(p => p.value === selectedStatus)?.label : "Selecione um status"}
+                  readOnly
+                  
+                />
                 <IoIosArrowDown className='icon__IoIosArrowDown'/>
                 <div className='dropsown__status'>
-                  Ativos
+                  {dropdownStatusOpen && (
+                    <div className="dropdown__status">
+                      {filteringStatus.map((option) => (
+                        <div key={option.value} className="value__status" onClick={() => handleStatusChange(option.value)}>
+                          {option.label}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -170,7 +198,7 @@ const filteringPeriod = [
                 <IoIosArrowDown className='icon__IoIosArrowDown'/>
               </div>
 
-              <div className='inner__filter' onClick={() => setDropdownOpen(!dropdownOpen)}>
+              <div className='inner__filter' onClick={() => setDropdownPeriodOpen(!dropdownPeriodOpen)}>
                 <GoClock className='icon__filter'/>
                 <input
                   type="text"
@@ -180,7 +208,7 @@ const filteringPeriod = [
                 />
                 <IoIosArrowDown className="icon__IoIosArrowDown" />
 
-                {dropdownOpen && (
+                {dropdownPeriodOpen && (
                   <div className="dropdown__period">
                     {filteringPeriod.map((option) => (
                       <div key={option.value} className='value__period' onClick={() => handlePeriodChange(option.value)}>

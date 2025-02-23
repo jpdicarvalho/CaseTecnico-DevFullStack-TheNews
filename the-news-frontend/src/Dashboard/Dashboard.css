@@ -43,10 +43,13 @@
     color: gray;
 }
 .dropsown__status{
-    background: red;
+    position: absolute;
+    background: white;
+    box-shadow: 0px 187px 75px rgba(0, 0, 0, 0.01), 0px 105px 63px rgba(0, 0, 0, 0.05), 0px 47px 47px rgba(0, 0, 0, 0.09), 0px 12px 26px rgba(0, 0, 0, 0.1), 0px 0px 0px rgba(0, 0, 0, 0.1);   
     margin-top: 5px;
     border-radius: 5px;
-    padding: 5px;
+    width: 250px;
+    z-index: 1000;
 }
 .dropdown__period{
     position: absolute;
@@ -55,7 +58,16 @@
     padding: 8px;
     margin-top: 10px;
     border-radius: 8px;
+    width: 250px;
     z-index: 1000;
+}
+.value__status{
+    padding: 3px;
+    margin: 5px;
+    transition: 0.5s;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 5px;
 }
 .value__period{
     padding: 3px;
@@ -64,6 +76,9 @@
     transition: 0.5s;
     font-size: 14px;
     cursor: pointer;
+}
+.value__status:hover{
+    background: rgba(128, 128, 128, 0.297);
 }
 .value__period:hover{
     background: rgba(128, 128, 128, 0.297);
