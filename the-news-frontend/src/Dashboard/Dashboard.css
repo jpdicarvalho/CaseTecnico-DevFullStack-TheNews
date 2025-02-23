@@ -7,6 +7,67 @@
     justify-content: space-between;
     margin-bottom: 10px;
 }
+
+.section__filter{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+.inner__filter{
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+.icon__filter{
+    position: absolute;
+    margin-left: 5px;
+    margin-top: 14px;
+    color: gray;
+}
+.input__filter{
+    height: 45px;
+    width: 100%;
+    padding: 8px;
+    padding-left: 25px;
+    border-radius: 5px;
+    margin-right: 20px;
+    cursor: pointer;
+    outline: none;
+    border: 1px solid #f6f6f6;
+    box-shadow: 0px 187px 75px rgba(0, 0, 0, 0.01), 0px 105px 63px rgba(0, 0, 0, 0.05), 0px 47px 47px rgba(0, 0, 0, 0.09), 0px 12px 26px rgba(0, 0, 0, 0.1), 0px 0px 0px rgba(0, 0, 0, 0.1);   
+}
+.icon__IoIosArrowDown{
+    position: absolute;
+    margin-left: 360px;
+    margin-top: -32px;
+    font-size: 20px;
+    color: gray;
+}
+.dropsown__status{
+    background: red;
+    margin-top: 5px;
+    border-radius: 5px;
+    padding: 5px;
+}
+.dropdown__period{
+    position: absolute;
+    background: white;
+    box-shadow: 0px 187px 75px rgba(0, 0, 0, 0.01), 0px 105px 63px rgba(0, 0, 0, 0.05), 0px 47px 47px rgba(0, 0, 0, 0.09), 0px 12px 26px rgba(0, 0, 0, 0.1), 0px 0px 0px rgba(0, 0, 0, 0.1);   
+    padding: 8px;
+    margin-top: 10px;
+    border-radius: 8px;
+    z-index: 1000;
+}
+.value__period{
+    padding: 3px;
+    margin: 5px;
+    border-radius: 5px;
+    transition: 0.5s;
+    font-size: 14px;
+    cursor: pointer;
+}
+.value__period:hover{
+    background: rgba(128, 128, 128, 0.297);
+}
 .section__logo__header{
     display: flex;
     justify-content: center;

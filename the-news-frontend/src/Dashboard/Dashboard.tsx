@@ -7,6 +7,8 @@ import { IoMailOpenOutline } from "react-icons/io5";
 import { IoFlashOutline } from "react-icons/io5";
 import { IoCalendarOutline } from "react-icons/io5";
 import { IoInformationCircleOutline } from "react-icons/io5";
+import { GoClock } from "react-icons/go";
+import { IoIosArrowDown } from "react-icons/io";
 
 import LogoTheNews from '../image.png';
 
@@ -73,9 +75,26 @@ const mockDashboardData = {
     },
   ];
 
+const filteringPeriod = [
+    { value: 24, label: "Últimas 24 horas" },
+    { value: 48, label: "Últimos 2 dias" },
+    { value: 72, label: "Últimos 3 dias" },
+    { value: 168, label: "Últimos 7 dias" },
+    { value: 336, label: "Últimos 14 dias" },
+    { value: 720, label: "Últimos 30 dias" },
+];
+
   const Dashboard = () => {
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [selectedPeriod, setSelectedPeriod] = useState<number | null>(null);
+    const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
+
+    const handlePeriodChange = (value: number) => {
+      setSelectedPeriod(value);
+      setDropdownOpen(false); // Fecha o dropdown após selecionar
+      console.log("Período selecionado:", value);
+    };
     //const [error, setError] = useState("");
   
     useEffect(() => {
@@ -135,6 +154,45 @@ const mockDashboardData = {
                 
             </div>
 
+            <div className='section__filter'>
+              <div className='inner__filter'>
+                <IoFlashOutline className='icon__filter'/>
+                <input type="text" className='input__filter' placeholder='Status do Streak'/>
+                <IoIosArrowDown className='icon__IoIosArrowDown'/>
+                <div className='dropsown__status'>
+                  Ativos
+                </div>
+              </div>
+
+              <div className='inner__filter'>
+                <IoMailOpenOutline className='icon__filter'/>
+                <input type="text" className='input__filter' placeholder='Newsletter Específica'/>
+                <IoIosArrowDown className='icon__IoIosArrowDown'/>
+              </div>
+
+              <div className='inner__filter' onClick={() => setDropdownOpen(!dropdownOpen)}>
+                <GoClock className='icon__filter'/>
+                <input
+                  type="text"
+                  className="input__filter"
+                  placeholder={selectedPeriod ? filteringPeriod.find(p => p.value === selectedPeriod)?.label : "Selecione um período"}
+                  readOnly
+                />
+                <IoIosArrowDown className="icon__IoIosArrowDown" />
+
+                {dropdownOpen && (
+                  <div className="dropdown__period">
+                    {filteringPeriod.map((option) => (
+                      <div key={option.value} className='value__period' onClick={() => handlePeriodChange(option.value)}>
+                        {option.label}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+            </div>
+
             <div className='section__grafics__and__ranking'>
                 {/* Gráfico de Engajamento */}
                 <div className='box__grafics'>
@@ -171,6 +229,7 @@ const mockDashboardData = {
                     </ResponsiveContainer>
                 </div>
             </div>
+
             {/* Ranking dos Usuários */}
             <div className='box__ranking'>
                     <h3 style={{textAlign: "center", margin: "5px"}}>
@@ -183,7 +242,7 @@ const mockDashboardData = {
                         </div>
                     ))}
                     </ul>
-                </div>
+            </div>
         </div>
       
     );
