@@ -126,7 +126,7 @@ const filteringPeriod = [
       console.log("Período selecionado:", value);
     };
 
-    const enableBtnFilter = selectedPeriod || selectedStatus;
+    const enableBtnFilter = selectedStatus || selectedNewsletter ||selectedPeriod;
     //const [error, setError] = useState("");
   
     useEffect(() => {
