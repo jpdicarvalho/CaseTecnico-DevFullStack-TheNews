@@ -75,6 +75,19 @@ const mockDashboardData = {
     },
   ];
 
+const filteringStatus = [
+    { value: 'Ativo', label: "Streaks ativos" },
+    { value: 'Inativo', label: "Streaks inativos" }
+];
+
+const filteringNewsletters = [
+    { value: "post_123456", label: "Newsletter - Edição #1" },
+    { value: "post_123457", label: "Newsletter - Edição #2" },
+    { value: "post_123458", label: "Newsletter - Edição #3" },
+    { value: "post_123459", label: "Newsletter - Edição #4" },
+    { value: "post_123460", label: "Newsletter - Edição #5" },
+ ];
+
 const filteringPeriod = [
     { value: 24, label: "Últimas 24 horas" },
     { value: 48, label: "Últimos 2 dias" },
@@ -84,23 +97,27 @@ const filteringPeriod = [
     { value: 720, label: "Últimos 30 dias" },
 ];
 
-const filteringStatus = [
-  { value: 'Ativo', label: "Streaks ativos" },
-  { value: 'Inativo', label: "Streaks inativos" }
-];
-
   const Dashboard = () => {
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    const [selectedPeriod, setSelectedPeriod] = useState<number | null>(null);
-    const [dropdownPeriodOpen, setDropdownPeriodOpen] = useState<boolean>(false);
     const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
     const [dropdownStatusOpen, setDropdownStatusOpen] = useState<boolean>(false);
+    const [selectedNewsletter, setSelectedNewsletter] = useState<string | null>(null);
+    const [dropdownNewsletterOpen, setDropdownNewsletterOpen] = useState<boolean>(false);
+    const [selectedPeriod, setSelectedPeriod] = useState<number | null>(null);
+    const [dropdownPeriodOpen, setDropdownPeriodOpen] = useState<boolean>(false);
+    
 
     const handleStatusChange = (value: string) => {
       setSelectedStatus(value);
       setDropdownStatusOpen(false); // Fecha o dropdown após selecionar
       console.log("Status selecionado:", value);
+    };
+
+    const handleNewsletterChange = (value: string) => {
+      setSelectedNewsletter(value);
+      setDropdownNewsletterOpen(false); // Fecha o dropdown após selecionar
+      console.log("Newsletter selecionada:", value);
     };
 
     const handlePeriodChange = (value: number) => {
@@ -109,6 +126,7 @@ const filteringStatus = [
       console.log("Período selecionado:", value);
     };
 
+    const enableBtnFilter = selectedPeriod || selectedStatus;
     //const [error, setError] = useState("");
   
     useEffect(() => {
@@ -178,7 +196,7 @@ const filteringStatus = [
                   readOnly
                   
                 />
-                <IoIosArrowDown className='icon__IoIosArrowDown'/>
+                
                 <div className='dropsown__status'>
                   {dropdownStatusOpen && (
                     <div className="dropdown__status">
@@ -194,8 +212,27 @@ const filteringStatus = [
 
               <div className='inner__filter'>
                 <IoMailOpenOutline className='icon__filter'/>
-                <input type="text" className='input__filter' placeholder='Newsletter Específica'/>
-                <IoIosArrowDown className='icon__IoIosArrowDown'/>
+                <input
+                  type="text"
+                  className="input__filter"
+                  placeholder={
+                    selectedNewsletter
+                      ? filteringNewsletters.find(p => p.value === selectedNewsletter)?.label
+                      : "Selecione uma edição"
+                  }
+                  readOnly
+                  onClick={() => setDropdownNewsletterOpen(!dropdownNewsletterOpen)}
+                />
+                
+                {dropdownNewsletterOpen && (
+                  <div className="dropdown__newsletters">
+                    {filteringNewsletters.map((option) => (
+                      <div key={option.value} className="value__newsletters" onClick={() => handleNewsletterChange(option.value)}>
+                        {option.label}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className='inner__filter' onClick={() => setDropdownPeriodOpen(!dropdownPeriodOpen)}>
@@ -206,7 +243,7 @@ const filteringStatus = [
                   placeholder={selectedPeriod ? filteringPeriod.find(p => p.value === selectedPeriod)?.label : "Selecione um período"}
                   readOnly
                 />
-                <IoIosArrowDown className="icon__IoIosArrowDown" />
+                
 
                 {dropdownPeriodOpen && (
                   <div className="dropdown__period">
@@ -219,6 +256,9 @@ const filteringStatus = [
                 )}
               </div>
 
+              <button className={enableBtnFilter ? 'btn__filter__enable':'btn__filter__disable'}>
+                Filtrar
+              </button>
             </div>
 
             <div className='section__grafics__and__ranking'>
