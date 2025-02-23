@@ -15,26 +15,29 @@ export const app = new Hono<Env>();
 app.use(
   "*",
   cors({
-    origin: "http://localhost:5173",
-    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    origin: "*",
+    allowMethods: ["GET", "POST"],
     allowHeaders: ["Authorization", "Content-Type"],
   })
 );
 
 // Webhook para registrar abertura de newsletter
-app.get("/", async (c) => {
+app.get("/webhook/newsletter-open", async (c) => {
   try {
     const email = c.req.query("email");
     const id = c.req.query("id");
 
+    // Validação dos parâmetros obrigatórios
     if (!email || !id) {
-      return c.json({ error: "Parâmetros email e id são obrigatórios" }, 400);
+      return c.json({ error: "Parâmetros email e id são obrigatórios." }, 400);
     }
 
     const db = c.env.DB;
 
     // Verifica se o usuário já existe
-    let user = await db.prepare("SELECT * FROM users WHERE email = ?").bind(email).first<{ id: string; email: string; streak: number; last_opened: string | null }>();
+    let user = await db.prepare("SELECT id, email, streak, last_opened FROM users WHERE email = ?")
+      .bind(email)
+      .first<{ id: string; email: string; streak: number; last_opened: string | null }>();
 
     if (!user) {
       // Criar usuário se não existir
@@ -54,17 +57,30 @@ app.get("/", async (c) => {
       user.last_opened = new Date().toISOString();
     }
 
+    // Registra a abertura da newsletter no banco
+    const existingNewsletter = await db.prepare("SELECT id FROM newsletters WHERE id = ? AND user_id = ?")
+      .bind(id, user.id)
+      .first();
+
+    if (!existingNewsletter) {
+      await db.prepare("INSERT INTO newsletters (id, user_id, opened_at) VALUES (?, ?, ?)")
+        .bind(id, user.id, new Date().toISOString()).run();
+    }
+
+    console.log(`✅ Webhook processado: email=${user.email}, id=${id}`);
+
     return c.json({
       message: "Webhook recebido e processado com sucesso!",
       email: user.email,
       streak: user.streak,
-      lastOpened: user.last_opened
+      lastOpened: user.last_opened,
     }, 200);
   } catch (error) {
-    console.error("Erro ao processar webhook:", error);
-    return c.json({ error: "Erro interno ao processar webhook" }, 500);
+    console.error("❌ Erro ao processar webhook:", error);
+    return c.json({ error: "Erro interno ao processar webhook." }, 500);
   }
 });
+
 
 // Login via e-mail (sem senha)
 app.post("/auth/login", async (c) => {
@@ -127,6 +143,7 @@ app.get("/user", authMiddleware, async (c) => {
   }
 });
 
+//Rota para obter a streak do usuário
 app.get("/streak", authMiddleware, async (c) => {
   try {
     // Obtém o usuário autenticado
@@ -164,11 +181,63 @@ app.get("/streak", authMiddleware, async (c) => {
   }
 });
 
-// Função utilitária para verificar streak consecutivo
+// Rota para filtrar dados no dashboard administrativo
+app.get("/admin/dashboard", authMiddleware, async (c) => {
+  try {
+    const db = c.env.DB;
+
+    // Captura os filtros enviados na URL
+    const period = c.req.query("period"); // Ex: 24, 48, 72...
+    const status = c.req.query("streakStatus"); // Ex: "Ativo" ou "Inativo"
+    const newsletterId = c.req.query("newsletterId"); // Ex: "post_123456"
+
+    let query = `
+      SELECT users.email, users.streak, users.last_opened, newsletters.id as newsletter_id, newsletters.opened_at
+      FROM users
+      INNER JOIN newsletters ON users.id = newsletters.user_id
+      WHERE 1=1
+    `;
+    const params: string[] = [];
+
+    // Filtro por período de tempo (últimas X horas/dias)
+    if (period) {
+      query += " AND newsletters.opened_at >= DATETIME('now', ? || ' hours')";
+      params.push(`-${period}`);
+    }
+
+    // Filtro por status do streak (Ativo/Inativo)
+    if (status === "Ativo") {
+      query += " AND users.streak > 1 AND users.last_opened >= DATE('now', '-7 days')";
+    } else if (status === "Inativo") {
+      query += " AND users.streak = 1 AND users.last_opened < DATE('now', '-7 days')";
+    }
+
+    // Filtro por newsletter específica
+    if (newsletterId) {
+      query += " AND newsletters.id = ?";
+      params.push(newsletterId);
+    }
+
+    // Executa a query com os filtros aplicados
+    const results = await db.prepare(query).bind(...params).all();
+
+    return c.json({
+      message: "Dados filtrados com sucesso",
+      data: results.results,
+    });
+  } catch (error) {
+    console.error("Erro ao buscar dados filtrados:", error);
+    return c.json({ error: "Erro interno ao buscar dados." }, 500);
+  }
+});
+
+// Função para verificar se a abertura foi consecutiva
 function checkIfConsecutive(lastOpened: string | null, today: Date): boolean {
   if (!lastOpened) return false;
+  
   const lastDate = new Date(lastOpened);
   const difference = (today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24);
+  
   return difference === 1;
 }
 
