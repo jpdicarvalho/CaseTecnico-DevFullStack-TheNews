@@ -1,118 +1,115 @@
-# 📢 The News - Gamificação na Newsletter
+# 📢 The News API - Dashboard de Engajamento
 
-## 📌 Introdução
+Bem-vindo ao **The News API**, um sistema para monitoramento de engajamento em newsletters, incluindo streaks de usuários, estatísticas gerais e filtros dinâmicos no dashboard administrativo.
 
-Este projeto foi desenvolvido para aumentar o engajamento dos leitores da newsletter **The News** através da **gamificação**. Inspirado no **Duolingo**, foi criado um sistema que premia leitores que mantêm uma **sequência de aberturas** das newsletters, incentivando a interação contínua com os conteúdos enviados regularmente.
+## 🚀 Tecnologias Utilizadas
+
+### **🛠️ Stacks**
+- **Backend**: [Hono.js](https://hono.dev/) (framework minimalista para Cloudflare Workers)
+- **Banco de Dados**: Cloudflare D1 (SQLite compatível com Workers)
+- **Autenticação**: JWT (JSON Web Token)
+- **Frontend**: React.js + Axios para requisições
+- **Deploy**: Cloudflare Workers
+- **Testes**: Postman, Insomnia e logs no Cloudflare Wrangler
+
+### **⚠️ Desafios Enfrentados**
+1. **Webhook da empresa não funcionando** → Criei um simulador de webhook no Cloudflare Workers.
+2. **Banco D1 sem suporte a algumas funções SQL** → Adaptei queries para compatibilidade.
+3. **CORS bloqueando requisições** → Implementei middleware para permitir requests do frontend.
+4. **JWT Storage** → Implementamos persistência do token com validação na API.
+
+### **📂 Organização do Código**
+Adotamos **modularização**:
+- **`index.ts`** → Ponto de entrada, onde rotas são importadas.
+- **`middleware/*.ts`** → Middleware de autenticação JWT.
+---
+
+## 📊 Estrutura dos Dados
+
+### **🗄️ Estrutura SQL**
+
+```sql
+CREATE TABLE users (
+    id TEXT PRIMARY KEY,
+    email TEXT UNIQUE NOT NULL,
+    streak INTEGER DEFAULT 0,
+    last_opened TEXT
+);
+
+CREATE TABLE newsletters (
+    id TEXT PRIMARY KEY,
+    user_id TEXT REFERENCES users(id),
+    opened_at TEXT
+);
+
+CREATE TABLE sessions (
+    user_id TEXT PRIMARY KEY REFERENCES users(id),
+    token TEXT NOT NULL,
+    expires_at TEXT NOT NULL
+);
+```
+
+### **📥 Inserções e Consultas**
+- **Webhook** → Insere leituras automaticamente ao ser acionado.
+- **Login** → Recupera usuário e gera JWT.
+- **Dashboard** → Filtros dinâmicos via query params.
+
+### **📈 Escalabilidade**
+O D1 é limitado em **escrita concorrente**, mas eficiente para leitura. Se precisar escalar:
+- Usar **Redis** para cache.
+- Migrar para **PostgreSQL** ou **PlanetScale (MySQL)**.
+- Implementar **fila de processamento** para registros massivos.
 
 ---
 
-## 🎯 Objetivo do Projeto
+## ✅ Testes Realizados
 
-Criar uma plataforma web funcional que permite aos leitores acompanharem suas estatísticas e streaks, enquanto a equipe da Waffle pode visualizar insights estratégicos sobre o engajamento dos usuários. 
+### **🔬 Tipos de Testes**
+- **API Testes**: Testamos todas as rotas via Postman.
+- **Webhook Teste**: Criamos um simulador enviando requisições a cada 5 minutos.
+- **Banco de Dados**: Inserimos dados de teste retroativos de 30 dias.
+- **Autenticação JWT**: Testamos expiração de token e middleware de segurança.
+- **Dashboard**: Filtros aplicados corretamente e dados formatados para gráficos.
 
-A solução conta com:
-- **Área logada para leitores** com estatísticas pessoais.
-- **Dashboard administrativo** para análise de métricas de engajamento.
-- **Processamento de dados via webhook** fornecido pelo The News.
-- **Gamificação para incentivar a retenção dos leitores.**
+### **⏳ Tempo de Desenvolvimento**
+- **Backend**: 2 dias
+- **Webhook e Testes**: 6 horas
+- **Frontend (dashboard + integração)**: 1 dia
+- **Refinamento e correções**: 8 horas
+- **Total**: **~3 dias e 14 horas**
+---
+
+## 📌 Como Rodar o Projeto
+
+### **🌐 Backend**
+1. Clone o repositório:
+   ```bash
+   git clone https://github.com/TheNews-Frontend
+   ```
+2. Instale dependências:
+   ```bash
+   cd the-news-api && npm install
+   ```
+3. Configure o Cloudflare Wrangler:
+   ```bash
+   npx wrangler login
+   ```
+4. Rode localmente:
+   ```bash
+   npm run dev
+   ```
+
+### **🖥️ Frontend**
+1. Clone o repositório do frontend.
+2. Instale dependências e rode:
+   ```bash
+   npm install && npm start
+   ```
+3. Acesse `http://localhost:3000` no navegador.
 
 ---
 
-## 🚀 Funcionalidades Implementadas
-
-### 🏆 Área de Login para Leitores
-- Login através do **e-mail**.
-- Exibição do **streak atual** (quantos dias consecutivos abriu a newsletter).
-- Histórico de aberturas.
-- Mensagens motivacionais para incentivar a continuidade do streak.
-
-### 📊 Dashboard Administrativo
-- Visualização das métricas gerais de engajamento.
-- **Ranking** dos leitores mais engajados.
-- Filtros por **newsletter**, **período de tempo** e **status do streak**.
-- **Gráficos interativos** para mostrar padrões de engajamento.
-
-### 🔥 Regras do Streak
-- O streak aumenta **+1** a cada dia consecutivo que o leitor abrir a newsletter.
-- Não há edições aos **domingos** (o streak não é contado nesse dia).
-
-### 🎮 Recursos Extras Implementados
-- **Gamificação:** Adição de badges e níveis para premiar leitores engajados.
-- **Personalização visual:** Aplicamos as cores e identidade do The News ([paleta aqui](https://www.canva.com/design/DAGfFZ6BJJQ/XOpqJRqDCY9cHmR4t1lj8g/view?utm_content=DAGfFZ6BJJQ&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=hf76a7e75bd)).
-
----
-
-## 📡 Integrações e Base de Dados
-
-O **FETCH GET** do webhook ocorre a cada 1 hora, processando os seguintes dados:
-
-- **E-mail:** Identificação do leitor via parâmetro {{email}}.
-- **ID da edição:** Identificador único do post `post_{{resource_id}}`.
-- **UTMs:** Captura das variáveis de origem da interação:
-  ```plaintext
-  utm_source = "tiktok"
-  utm_medium = "socialpaid"
-  utm_campaign = "12/12/2024"
-  utm_channel = "web"
-  ```
-
-🔗 **APIs Utilizadas:**
-- **Beehiiv GET Post**: `backend.testeswaffle.org`
-- **Webhook de consulta**: `https://backend.testeswaffle.org/webhooks/case/fetch?email=email@example.com`
-
----
-
-## 🔍 Relatório de Desenvolvimento
-
-### 1️⃣ **Stacks Utilizadas**
-- **Frontend:** React + TypeScript.
-- **Backend:** Node.js + Express.
-- **Banco de Dados:** PostgreSQL com Prisma ORM.
-- **Autenticação:** JWT.
-
-### 2️⃣ **Banco de Dados e Consultas**
-- Estrutura baseada em tabelas para **usuários, leituras e newsletters**.
-- Uso de índices para otimizar consultas de streaks e engajamento.
-- API escalável para processar grandes volumes de dados em tempo real.
-
-### 3️⃣ **Testes e Qualidade**
-- **Testes unitários:** Jest.
-- **Testes de integração:** Cypress.
-- **Cobertura de código:** 90%.
-
----
-
-## 📦 Entrega
-
-1️⃣ **Repositório GitHub (privado)**
-   - Código-fonte documentado.
-   - Enviado para `***le.com.br`.
-
-2️⃣ **Demo funcional**
-   - [Link para o ambiente online](https://demo.thenewsapp.com)
-   - [Vídeo demonstrativo](https://youtube.com/demo)
-
-3️⃣ **Relatório de análise**
-   - Explicação detalhada das decisões técnicas e insights obtidos.
-
-4️⃣ **Sugestões de melhorias futuras**
-   - Melhorias na UI/UX.
-   - Novas mecânicas de gamificação.
-   - Automação de notificações personalizadas.
-
----
-
-## 🏆 Avaliação Final
-
-✅ **Frontend:** Interface intuitiva, responsiva e bem desenhada.
-✅ **Banco de Dados:** Queries otimizadas e escaláveis.
-✅ **Experiência do Usuário:** Fluxo de navegação eficiente.
-✅ **Código:** Organizado seguindo boas práticas.
-✅ **Funcionalidade:** Implementação correta das regras de streak.
-✅ **Diferenciais:** Criatividade na gamificação e branding.
-
----
-
-💡 **Dúvidas?** Entre em contato.
-
-📌 **Projeto concluído com sucesso!** 🚀
+## 📬 Contato
+Caso tenha dúvidas ou sugestões:
+- 📧 Email: `seuemail@email.com`
+- 💼 LinkedIn: [linkedin.com/in/seuperfil](https://linkedin.com/in/seuperfil)
