@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-//import axios from "axios";
+import axios from 'axios';
 import {  AreaChart, Area, CartesianGrid, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 import { PiUsersThreeLight } from "react-icons/pi";
@@ -8,7 +8,6 @@ import { IoFlashOutline } from "react-icons/io5";
 import { IoCalendarOutline } from "react-icons/io5";
 import { IoInformationCircleOutline } from "react-icons/io5";
 import { GoClock } from "react-icons/go";
-import { IoIosArrowDown } from "react-icons/io";
 
 import LogoTheNews from '../image.png';
 
@@ -129,12 +128,24 @@ const filteringPeriod = [
     const enableBtnFilter = selectedStatus || selectedNewsletter ||selectedPeriod;
     //const [error, setError] = useState("");
   
-    useEffect(() => {
-      // Simulando tempo de resposta da API
-      setTimeout(() => {
-        setData(mockDashboardData);
+    const getData = async () => {
+      try {
+        const response = await axios.get("https://the-news-api.joaopedrobraga-07.workers.dev/admin/dashboard", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`, // Pegando o token armazenado no localStorage
+            "Content-Type": "application/json",
+          },
+        });
         setLoading(false);
-      }, 1000); // Simula um delay de 1 segundo
+        console.log("Dados recebidos:", response.data);
+        return response.data; // Retorna os dados para serem usados no state
+      } catch (error) {
+        console.error("Erro ao buscar dados do dashboard:", error);
+      }
+    };
+    useEffect(() => {
+      getData()
+      setData(mockDashboardData);
     }, []);
   
     if (loading) return <p>Carregando...</p>;

@@ -181,51 +181,89 @@ app.get("/streak", authMiddleware, async (c) => {
 });
 
 // Rota para filtrar dados no dashboard administrativo
+// Rota para obter estatísticas do dashboard administrativo
 app.get("/admin/dashboard", authMiddleware, async (c) => {
   try {
     const db = c.env.DB;
 
     // Captura os filtros enviados na URL
-    const period = c.req.query("period"); // Ex: 24, 48, 72...
+    const period = c.req.query("period"); // Ex: 24, 48, 72 (horas)
     const status = c.req.query("streakStatus"); // Ex: "Ativo" ou "Inativo"
     const newsletterId = c.req.query("newsletterId"); // Ex: "post_123456"
 
-    let query = `
-      SELECT users.email, users.streak, users.last_opened, newsletters.id as newsletter_id, newsletters.opened_at
-      FROM users
-      INNER JOIN newsletters ON users.id = newsletters.user_id
-      WHERE 1=1
-    `;
+    // Parâmetros para a query SQL
     const params: string[] = [];
+    let whereConditions = "1=1"; // Base da query
 
-    // Filtro por período de tempo (últimas X horas/dias)
+    // Filtro por período (últimas X horas)
     if (period) {
-      query += " AND newsletters.opened_at >= DATETIME('now', ? || ' hours')";
+      whereConditions += " AND newsletters.opened_at >= DATETIME('now', ? || ' hours')";
       params.push(`-${period}`);
     }
 
     // Filtro por status do streak (Ativo/Inativo)
     if (status === "Ativo") {
-      query += " AND users.streak > 1 AND users.last_opened >= DATE('now', '-7 days')";
+      whereConditions += " AND users.streak > 1 AND users.last_opened >= DATE('now', '-7 days')";
     } else if (status === "Inativo") {
-      query += " AND users.streak = 1 AND users.last_opened < DATE('now', '-7 days')";
+      whereConditions += " AND users.streak = 1 AND users.last_opened < DATE('now', '-7 days')";
     }
 
     // Filtro por newsletter específica
     if (newsletterId) {
-      query += " AND newsletters.id = ?";
+      whereConditions += " AND newsletters.id = ?";
       params.push(newsletterId);
     }
 
-    // Executa a query com os filtros aplicados
-    const results = await db.prepare(query).bind(...params).all();
+    // **Consulta para estatísticas gerais**
+    const statsQuery = `
+      SELECT 
+        (SELECT COUNT(*) FROM users) AS totalUsers,
+        (SELECT COUNT(*) FROM newsletters) AS openNewsletters,
+        (SELECT ROUND(AVG(streak), 2) FROM users) AS avgStreaks,
+        (
+          SELECT COUNT(DISTINCT users.id) * 100.0 / COUNT(users.id)
+          FROM users
+          INNER JOIN newsletters ON users.id = newsletters.user_id
+          WHERE users.last_opened >= DATE('now', '-30 days')
+        ) AS retentionRate
+    `;
+    const stats = await db.prepare(statsQuery).first<{
+      totalUsers: number;
+      openNewsletters: number;
+      avgStreaks: number;
+      retentionRate: number;
+    }>();
 
+    // **Consulta para ranking dos 10 usuários mais engajados**
+    const rankingQuery = `
+      SELECT email, streak, last_opened
+      FROM users
+      ORDER BY streak DESC
+      LIMIT 10
+    `;
+    const ranking = await db.prepare(rankingQuery).all<{ email: string; streak: number; last_opened: string }>();
+
+    // **Consulta para resultados filtrados**
+    const filteredQuery = `
+      SELECT users.email, users.streak, users.last_opened, newsletters.id as newsletter_id, newsletters.opened_at
+      FROM users
+      INNER JOIN newsletters ON users.id = newsletters.user_id
+      WHERE ${whereConditions}
+    `;
+    const filteredResults = await db.prepare(filteredQuery).bind(...params).all();
+
+    // **Retorno estruturado**
     return c.json({
-      message: "Dados filtrados com sucesso",
-      data: results.results,
+      message: "Dados do dashboard obtidos com sucesso!",
+      totalUsers: stats?.totalUsers || 0,
+      openNewsletters: stats?.openNewsletters || 0,
+      avgStreaks: stats?.avgStreaks || 0,
+      retentionRate: stats?.retentionRate?.toFixed(2) || "0.00%",
+      topUsers: ranking.results || [],
+      filteredResults: filteredResults.results || [],
     });
   } catch (error) {
-    console.error("Erro ao buscar dados filtrados:", error);
+    console.error("Erro ao buscar dados do dashboard:", error);
     return c.json({ error: "Erro interno ao buscar dados." }, 500);
   }
 });
