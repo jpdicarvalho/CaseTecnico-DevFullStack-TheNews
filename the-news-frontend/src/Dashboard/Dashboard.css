@@ -7,7 +7,13 @@
     justify-content: space-between;
     margin-bottom: 10px;
 }
-
+.loader__box{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100dvh;
+}
 .section__filter{
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));

@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import {  AreaChart, Area, CartesianGrid, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 import { PiUsersThreeLight } from "react-icons/pi";
 import { IoMailOpenOutline } from "react-icons/io5";
 import { IoFlashOutline } from "react-icons/io5";
 import { IoCalendarOutline } from "react-icons/io5";
-import { IoInformationCircleOutline } from "react-icons/io5";
 import { GoClock } from "react-icons/go";
 
 import LogoTheNews from '../image.png';
+import Loader from '../Loader/Loader';
+
 
 import './Dashboard.css'
 
@@ -124,7 +125,11 @@ const filteringNewsletters = [
       
     }, []);
   
-    if (loading) return <p>Carregando...</p>;
+    if (loading) return (
+    <div className='loader__box'>
+      <Loader/>
+    </div>
+    );
   
     return (
         <div className='main__dashboard'>
@@ -140,12 +145,8 @@ const filteringNewsletters = [
                     
                 </div>
                 </div>
-    
+            
             {/* Seção de Métricas */}
-            <div className='information__metrics'>
-                <IoInformationCircleOutline className='icon__IoInformationCircleOutline'/>
-            </div>
-
             <div className='section__metrics'>
                 <div className='inner__metrics'>
                     <PiUsersThreeLight className='icon__metrics'/>
@@ -250,7 +251,7 @@ const filteringNewsletters = [
             <div className='section__grafics__and__ranking'>
               {/* Gráfico de Engajamento */}
               <div className='box__grafics'>
-                  <h3>Engajamento ao longo do tempo</h3>
+                  <h3 style={{textAlign: "center", margin: "5px"}}>Engajamento ao longo do tempo</h3>
                   <ResponsiveContainer width="100%" height={300}>
                       <AreaChart
                           width={500}
@@ -263,11 +264,16 @@ const filteringNewsletters = [
                               bottom: 0,
                           }}
                           >
-                          <CartesianGrid strokeDasharray="3 3" />
+                          
                           <XAxis dataKey="name" />
                           <YAxis />
                           <Tooltip />
-                          <Area type="monotone" dataKey="uv" stroke="#8884d8" fill="#8884d8" />
+                          <Area type="monotone" 
+                            dataKey="Usuários" 
+                            stroke="rgb(255, 207, 0)"  
+                            fill="rgb(255, 207, 0)" 
+                            strokeWidth={2}  
+                            dot={{ fill: "rgb(255, 207, 0)", stroke: "white", strokeWidth: 1, r: 3 }} />
                       </AreaChart>
                   </ResponsiveContainer>
               </div>
