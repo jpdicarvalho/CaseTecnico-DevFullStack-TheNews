@@ -194,7 +194,7 @@ app.get("/admin/dashboard", authMiddleware, async (c) => {
     const params: string[] = [];
     let whereConditions = "1=1"; // Base da query
 
-    // **Filtro por período (últimos X horas/dias)**
+    // **Filtro por período**
     whereConditions += " AND newsletters.opened_at >= DATETIME('now', ? || ' hours')";
     params.push(`-${period}`);
 
@@ -258,13 +258,23 @@ app.get("/admin/dashboard", authMiddleware, async (c) => {
       avgStreaks: number;
     }>();
 
-    // **📌 Formata os dados para o gráfico**
-    const formattedEngagementData = engagementResults.results.map((entry) => ({
-      name: entry.day,
-      uv: entry.totalOpens, // Total de aberturas de newsletters
-      pv: entry.avgStreaks, // Média de streaks no dia
-      amt: entry.totalOpens, // Pode ser duplicado caso precise para algum gráfico específico
-    }));
+    // **📌 Formata os dados para o gráfico com 3 pontos fixos**
+    const today = new Date();
+    const past15Days = new Date(today);
+    past15Days.setDate(today.getDate() - 15);
+    const past30Days = new Date(today);
+    past30Days.setDate(today.getDate() - 30);
+
+    const getMetric = (date: Date) => {
+      const formattedDate = date.toISOString().split("T")[0];
+      return engagementResults.results.find((entry) => entry.day === formattedDate) || { totalOpens: 0, avgStreaks: 0 };
+    };
+
+    const formattedEngagementData = [
+      { name: past30Days.toISOString().split("T")[0], uv: getMetric(past30Days).totalOpens, pv: getMetric(past30Days).avgStreaks, amt: getMetric(past30Days).totalOpens },
+      { name: past15Days.toISOString().split("T")[0], uv: getMetric(past15Days).totalOpens, pv: getMetric(past15Days).avgStreaks, amt: getMetric(past15Days).totalOpens },
+      { name: today.toISOString().split("T")[0], uv: getMetric(today).totalOpens, pv: getMetric(today).avgStreaks, amt: getMetric(today).totalOpens }
+    ];
 
     // **📌 Retorno estruturado**
     return c.json({
@@ -281,6 +291,7 @@ app.get("/admin/dashboard", authMiddleware, async (c) => {
     return c.json({ error: "Erro interno ao buscar dados." }, 500);
   }
 });
+
 
 
 // Função para verificar se a abertura foi consecutiva

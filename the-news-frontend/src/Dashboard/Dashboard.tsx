@@ -256,55 +256,44 @@ const filteringPeriod = [
               </button>
             </div>
 
-            <div className='section__grafics'>
-                {/* Gráfico de Engajamento */}
-                <div className='box__grafics'>
-                    <h3>Distribuição de streaks</h3>
-                    <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={data.ranking}>
-                            <XAxis dataKey="email" />
-                            <YAxis />
-                            <Tooltip />
-                            <Bar dataKey="streak" fill="#8884d8" />
-                        </BarChart>
-                    </ResponsiveContainer>
-                </div>
-                <div className='box__grafics'>
-                    <h3>Engajamento ao longo do tempo</h3>
-                    <ResponsiveContainer width="100%" height={300}>
-                        <AreaChart
-                            width={500}
-                            height={400}
-                            data={data2}
-                            margin={{
-                                top: 10,
-                                right: 30,
-                                left: 0,
-                                bottom: 0,
-                            }}
-                            >
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="name" />
-                            <YAxis />
-                            <Tooltip />
-                            <Area type="monotone" dataKey="uv" stroke="#8884d8" fill="#8884d8" />
-                        </AreaChart>
-                    </ResponsiveContainer>
-                </div>
-            </div>
+            <div className='section__grafics__and__ranking'>
+              {/* Gráfico de Engajamento */}
+              <div className='box__grafics'>
+                  <h3>Engajamento ao longo do tempo</h3>
+                  <ResponsiveContainer width="100%" height={300}>
+                      <AreaChart
+                          width={500}
+                          height={400}
+                          data={data2}
+                          margin={{
+                              top: 10,
+                              right: 30,
+                              left: 0,
+                              bottom: 0,
+                          }}
+                          >
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" />
+                          <YAxis />
+                          <Tooltip />
+                          <Area type="monotone" dataKey="uv" stroke="#8884d8" fill="#8884d8" />
+                      </AreaChart>
+                  </ResponsiveContainer>
+              </div>
 
-            {/* Ranking dos Usuários */}
-            <div className='box__ranking'>
-                    <h3 style={{textAlign: "center", margin: "5px"}}>
-                        Top 10 Usuários Mais Engajados
-                    </h3>
-                    <ul>
-                    {data.topUsers.map((user: any, index: number) => (
-                        <div key={index} className='inner__user'>
-                            {index + 1}. {user.email} - <IoFlashOutline className='icon__metrics'/> {user.streak} dias
-                        </div>
-                    ))}
-                    </ul>
+              {/* Ranking dos Usuários */}
+              <div className='box__ranking'>
+                  <h3 style={{textAlign: "center", margin: "5px"}}>
+                      Top 10 Usuários Mais Engajados
+                  </h3>
+                  <ul>
+                  {data.topUsers.map((user: any, index: number) => (
+                      <div key={index} className='inner__user'>
+                          {index + 1}. {user.email} - <IoFlashOutline className='icon__metrics'/> {user.streak} dias
+                      </div>
+                  ))}
+                  </ul>
+              </div>
             </div>
         </div>
     );
