@@ -26,7 +26,7 @@ const sendWebhookRequest = async () => {
 	const id = generateRandomId();
 	const url = `${TARGET_API}?email=${email}&id=${id}`;
   
-	console.log(`📤 Enviando webhook para ${url}`);
+	console.log(`Enviando webhook para ${url}`);
   
 	try {
 	  const response = await fetch(url, { method: "GET" });
@@ -34,22 +34,22 @@ const sendWebhookRequest = async () => {
 	  // **Corrigindo erro ao tentar parsear um HTML como JSON**
 	  const contentType = response.headers.get("content-type");
 	  if (!contentType || !contentType.includes("application/json")) {
-		console.error("❌ Resposta não é JSON! Código de erro:", response.status);
-		console.error("🔍 Resposta recebida:", await response.text()); // Exibe erro real
+		console.error("Resposta não é JSON! Código de erro:", response.status);
+		console.error("Resposta recebida:", await response.text()); // Exibe erro real
 		return;
 	  }
   
 	  const data = await response.json();
-	  console.log("✅ Resposta recebida:", data);
+	  console.log("Resposta recebida:", data);
 	} catch (error) {
-	  console.error("❌ Erro ao enviar webhook:", error);
+	  console.error("Erro ao enviar webhook:", error);
 	}
   };
 
 // **💡 Corrigindo a exportação da função `scheduled`**
 export default {
   async scheduled(event: ScheduledEvent, env: any, ctx: ExecutionContext) {
-    console.log("⏰ Executando webhook automático via cron...");
+    console.log("Executando webhook automático via cron...");
     await sendWebhookRequest();
   },
 };
