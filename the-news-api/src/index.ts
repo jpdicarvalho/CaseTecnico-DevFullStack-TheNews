@@ -186,8 +186,8 @@ app.get("/admin/dashboard", authMiddleware, async (c) => {
     const db = c.env.DB;
 
     // Captura os filtros enviados na URL (se não forem passados, usa os padrões)
-    const period = c.req.query("period") ?? "720"; // Padrão: últimos 30 dias (720 horas)
-    const status = c.req.query("streakStatus") ?? "Ativo"; // Padrão: Streaks Ativos
+    const period = c.req.query("period"); // Padrão: últimos 30 dias (720 horas)
+    const status = c.req.query("streakStatus"); // Padrão: Streaks Ativos
     const newsletterId = c.req.query("newsletterId"); // Opcional
 
     // Parâmetros para a query SQL
@@ -211,7 +211,7 @@ app.get("/admin/dashboard", authMiddleware, async (c) => {
       params.push(newsletterId);
     }
 
-    // **1️⃣ Estatísticas Gerais**
+    // **Estatísticas Gerais**
     const statsQuery = `
       SELECT 
         (SELECT COUNT(*) FROM users) AS totalUsers,
@@ -231,7 +231,7 @@ app.get("/admin/dashboard", authMiddleware, async (c) => {
       retentionRate: number;
     }>();
 
-    // **2️⃣ Ranking dos 10 usuários mais engajados**
+    // **Ranking dos 10 usuários mais engajados**
     const rankingQuery = `
       SELECT email, streak, last_opened
       FROM users
@@ -240,7 +240,7 @@ app.get("/admin/dashboard", authMiddleware, async (c) => {
     `;
     const ranking = await db.prepare(rankingQuery).all<{ email: string; streak: number; last_opened: string }>();
 
-    // **3️⃣ Estatísticas de engajamento filtradas (para alimentar o gráfico)**
+    // **Estatísticas de engajamento filtradas (para alimentar o gráfico)**
     const engagementQuery = `
       SELECT 
         DATE(newsletters.opened_at) AS day,
@@ -258,7 +258,7 @@ app.get("/admin/dashboard", authMiddleware, async (c) => {
       avgStreaks: number;
     }>();
 
-    // **📌 Formata os dados para o gráfico com 3 pontos fixos**
+    // **Formata os dados para o gráfico com 3 pontos fixos**
     const today = new Date();
     const past15Days = new Date(today);
     past15Days.setDate(today.getDate() - 15);
@@ -276,7 +276,7 @@ app.get("/admin/dashboard", authMiddleware, async (c) => {
       { name: today.toISOString().split("T")[0], uv: getMetric(today).totalOpens, pv: getMetric(today).avgStreaks, amt: getMetric(today).totalOpens }
     ];
 
-    // **📌 Retorno estruturado**
+    // **Retorno estruturado**
     return c.json({
       message: "Dados do dashboard obtidos com sucesso!",
       totalUsers: stats?.totalUsers || 0,

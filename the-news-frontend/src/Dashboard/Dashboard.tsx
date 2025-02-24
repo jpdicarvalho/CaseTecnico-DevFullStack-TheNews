@@ -114,20 +114,57 @@ const filteringPeriod = [
   
     const getData = async () => {
       try {
-        const response = await axios.get("https://the-news-api.joaopedrobraga-07.workers.dev/admin/dashboard", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`, // Pegando o token armazenado no localStorage
-            "Content-Type": "application/json",
-          },
+        setLoading(true);
+    
+        // Garante que os filtros sempre tenham um valor padrão
+        const period = selectedPeriod ?? 720; // Padrão: Últimos 30 dias
+        const streakStatus = selectedStatus ?? "Ativo"; // Padrão: Streaks ativos
+        const newsletterId = selectedNewsletter ?? ""; // Se não houver, não passa
+    
+        // Obtém o token do localStorage com segurança
+        const token = localStorage.getItem("token");
+        if (!token) {
+          throw new Error("Token de autenticação não encontrado.");
+        }
+    
+        // Monta os parâmetros da URL
+        const queryParams = new URLSearchParams({
+          period: String(period),
+          streakStatus: String(streakStatus),
         });
-        setLoading(false);
+    
+        // Adiciona o `newsletterId` apenas se estiver definido
+        if (newsletterId) {
+          queryParams.append("newsletterId", newsletterId);
+        }
+    
+        const response = await axios.get(
+          `https://the-news-api.joaopedrobraga-07.workers.dev/admin/dashboard?${queryParams.toString()}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+    
         setData(response.data);
         console.log("Dados recebidos:", response.data);
-        return response.data; // Retorna os dados para serem usados no state
-      } catch (error) {
-        console.error("Erro ao buscar dados do dashboard:", error);
+        return response.data;
+      } catch (error: any) {
+        console.error(" Erro ao buscar dados do dashboard:", error);
+    
+        // Captura mensagens detalhadas da API, se disponíveis
+        if (error.response) {
+          console.error("Detalhes do erro:", error.response.data);
+        }
+    
+        return null; // Retorna `null` para evitar quebra do código ao usar os dados
+      } finally {
+        setLoading(false); // Garante que o estado de carregamento seja atualizado sempre
       }
     };
+    
     useEffect(() => {
       getData()
       
@@ -251,7 +288,7 @@ const filteringPeriod = [
                 )}
               </div>
 
-              <button className={enableBtnFilter ? 'btn__filter__enable':'btn__filter__disable'}>
+              <button className={enableBtnFilter ? 'btn__filter__enable':'btn__filter__disable'} onClick={getData}>
                 Filtrar
               </button>
             </div>
@@ -264,7 +301,7 @@ const filteringPeriod = [
                       <AreaChart
                           width={500}
                           height={400}
-                          data={data2}
+                          data={data.engagementData}
                           margin={{
                               top: 10,
                               right: 30,
