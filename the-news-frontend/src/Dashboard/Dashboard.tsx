@@ -12,22 +12,6 @@ import { GoClock } from "react-icons/go";
 import LogoTheNews from '../image.png';
 
 import './Dashboard.css'
-const mockDashboardData = {
-    totalUsers: 250, // Total de usuários cadastrados
-    totalNewslettersOpened: 3200, // Total de newsletters abertas
-    ranking: [
-      { email: "João", streak: 30 },
-      { email: "Pedro", streak: 28 },
-      { email: "Braga", streak: 25 },
-      { email: "wede", streak: 23 },
-      { email: "Tâmara", streak: 22 },
-      { email: "aa", streak: 21 },
-      { email: "ss", streak: 20 },
-      { email: "dd", streak: 19 },
-      { email: "d@d.d", streak: 18 },
-      { email: "fdd", streak: 17 },
-    ],
-  };
 
   const data2 = [
     {
@@ -137,6 +121,7 @@ const filteringPeriod = [
           },
         });
         setLoading(false);
+        setData(response.data);
         console.log("Dados recebidos:", response.data);
         return response.data; // Retorna os dados para serem usados no state
       } catch (error) {
@@ -145,11 +130,10 @@ const filteringPeriod = [
     };
     useEffect(() => {
       getData()
-      setData(mockDashboardData);
+      
     }, []);
   
     if (loading) return <p>Carregando...</p>;
-    //if (error) return <p style={{ color: "red" }}>{error}</p>;
   
     return (
         <div className='main__dashboard'>
@@ -180,18 +164,18 @@ const filteringPeriod = [
                 </div>
                 <div className='inner__metrics'>
                         <IoMailOpenOutline className='icon__metrics'/>
-                        <h3>{data.totalNewslettersOpened}</h3>
+                        <h3>{data.openNewsletters}</h3>
                         <p className='span__metrics'>Aberturas de Newsletters</p>
 
                 </div>
                 <div className='inner__metrics'>
                     <IoFlashOutline className='icon__metrics'/>
-                    <h3>{data.totalNewslettersOpened}</h3>
+                    <h3>{data.avgStreaks}</h3>
                     <p className='span__metrics'>Média de Streaks</p>
                 </div>
                 <div className='inner__metrics'>
                     <IoCalendarOutline />
-                    <h3>{data.totalNewslettersOpened}</h3>
+                    <h3>{data.retentionRate}</h3>
                     <p className='span__metrics'>Taxa de Rentenção</p>
                 </div>
                 
@@ -315,7 +299,7 @@ const filteringPeriod = [
                         Top 10 Usuários Mais Engajados
                     </h3>
                     <ul>
-                    {data.ranking.map((user: any, index: number) => (
+                    {data.topUsers.map((user: any, index: number) => (
                         <div key={index} className='inner__user'>
                             {index + 1}. {user.email} - <IoFlashOutline className='icon__metrics'/> {user.streak} dias
                         </div>
@@ -323,7 +307,6 @@ const filteringPeriod = [
                     </ul>
             </div>
         </div>
-      
     );
   };
   

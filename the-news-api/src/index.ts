@@ -180,41 +180,38 @@ app.get("/streak", authMiddleware, async (c) => {
   }
 });
 
-// Rota para filtrar dados no dashboard administrativo
 // Rota para obter estatísticas do dashboard administrativo
 app.get("/admin/dashboard", authMiddleware, async (c) => {
   try {
     const db = c.env.DB;
 
-    // Captura os filtros enviados na URL
-    const period = c.req.query("period"); // Ex: 24, 48, 72 (horas)
-    const status = c.req.query("streakStatus"); // Ex: "Ativo" ou "Inativo"
-    const newsletterId = c.req.query("newsletterId"); // Ex: "post_123456"
+    // Captura os filtros enviados na URL (se não forem passados, usa os padrões)
+    const period = c.req.query("period") ?? "720"; // Padrão: últimos 30 dias (720 horas)
+    const status = c.req.query("streakStatus") ?? "Ativo"; // Padrão: Streaks Ativos
+    const newsletterId = c.req.query("newsletterId"); // Opcional
 
     // Parâmetros para a query SQL
     const params: string[] = [];
     let whereConditions = "1=1"; // Base da query
 
-    // Filtro por período (últimas X horas)
-    if (period) {
-      whereConditions += " AND newsletters.opened_at >= DATETIME('now', ? || ' hours')";
-      params.push(`-${period}`);
-    }
+    // **Filtro por período (últimos X horas/dias)**
+    whereConditions += " AND newsletters.opened_at >= DATETIME('now', ? || ' hours')";
+    params.push(`-${period}`);
 
-    // Filtro por status do streak (Ativo/Inativo)
+    // **Filtro por status do streak**
     if (status === "Ativo") {
       whereConditions += " AND users.streak > 1 AND users.last_opened >= DATE('now', '-7 days')";
     } else if (status === "Inativo") {
       whereConditions += " AND users.streak = 1 AND users.last_opened < DATE('now', '-7 days')";
     }
 
-    // Filtro por newsletter específica
+    // **Filtro por newsletter específica (se informado)**
     if (newsletterId) {
       whereConditions += " AND newsletters.id = ?";
       params.push(newsletterId);
     }
 
-    // **Consulta para estatísticas gerais**
+    // **1️⃣ Estatísticas Gerais**
     const statsQuery = `
       SELECT 
         (SELECT COUNT(*) FROM users) AS totalUsers,
@@ -234,7 +231,7 @@ app.get("/admin/dashboard", authMiddleware, async (c) => {
       retentionRate: number;
     }>();
 
-    // **Consulta para ranking dos 10 usuários mais engajados**
+    // **2️⃣ Ranking dos 10 usuários mais engajados**
     const rankingQuery = `
       SELECT email, streak, last_opened
       FROM users
@@ -243,7 +240,7 @@ app.get("/admin/dashboard", authMiddleware, async (c) => {
     `;
     const ranking = await db.prepare(rankingQuery).all<{ email: string; streak: number; last_opened: string }>();
 
-    // **Consulta para resultados filtrados**
+    // **3️⃣ Estatísticas de engajamento filtradas**
     const filteredQuery = `
       SELECT users.email, users.streak, users.last_opened, newsletters.id as newsletter_id, newsletters.opened_at
       FROM users
@@ -252,7 +249,7 @@ app.get("/admin/dashboard", authMiddleware, async (c) => {
     `;
     const filteredResults = await db.prepare(filteredQuery).bind(...params).all();
 
-    // **Retorno estruturado**
+    // **📌 Retorno estruturado**
     return c.json({
       message: "Dados do dashboard obtidos com sucesso!",
       totalUsers: stats?.totalUsers || 0,
