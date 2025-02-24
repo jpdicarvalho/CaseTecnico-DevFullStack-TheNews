@@ -271,9 +271,7 @@ app.get("/admin/dashboard", authMiddleware, async (c) => {
     // **Estrutura final do gráfico**
     const formattedEngagementData = dates.map((date) => ({
       name: date,
-      uv: getMetric(date).totalOpens,
-      pv: getMetric(date).avgStreaks,
-      amt: getMetric(date).totalOpens
+      Usuários: getMetric(date).totalOpens,
     }));
 
     // **Retorno formatado para o frontend**
