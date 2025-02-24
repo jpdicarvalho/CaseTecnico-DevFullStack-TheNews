@@ -185,16 +185,16 @@ app.get("/admin/dashboard", authMiddleware, async (c) => {
   try {
     const db = c.env.DB;
 
-    // Captura os filtros enviados na URL
-    const period = c.req.query("period");
-    const status = c.req.query("streakStatus");
-    const newsletterId = c.req.query("newsletterId");
+    // Captura os filtros enviados na URL ou define valores padrão
+    const period = c.req.query("period") || "720"; // Padrão: Últimos 30 dias (720 horas)
+    const status = c.req.query("streakStatus") || "Ativo"; // Padrão: Streaks ativos
+    const newsletterId = c.req.query("newsletterId"); // Opcional
 
-    // Parâmetros para a query SQL
+    // **Parâmetros e query base**
     const params: string[] = [];
-    let whereConditions = "1=1"; // Base da query
+    let whereConditions = "1=1"; 
 
-    // **Filtro por período**
+    // **Filtro por período de tempo**
     whereConditions += " AND newsletters.opened_at >= DATETIME('now', ? || ' hours')";
     params.push(`-${period}`);
 
@@ -211,7 +211,7 @@ app.get("/admin/dashboard", authMiddleware, async (c) => {
       params.push(newsletterId);
     }
 
-    // **Estatísticas Gerais**
+    // **📊 Estatísticas Gerais**
     const statsQuery = `
       SELECT 
         (SELECT COUNT(*) FROM users) AS totalUsers,
@@ -231,7 +231,7 @@ app.get("/admin/dashboard", authMiddleware, async (c) => {
       retentionRate: number;
     }>();
 
-    // **Ranking dos 10 usuários mais engajados**
+    // **🏆 Ranking dos 10 usuários mais engajados**
     const rankingQuery = `
       SELECT email, streak, last_opened
       FROM users
@@ -240,7 +240,7 @@ app.get("/admin/dashboard", authMiddleware, async (c) => {
     `;
     const ranking = await db.prepare(rankingQuery).all<{ email: string; streak: number; last_opened: string }>();
 
-    // **Estatísticas de engajamento filtradas (para alimentar o gráfico)**
+    // **📈 Engajamento ao longo do tempo**
     const engagementQuery = `
       SELECT 
         DATE(newsletters.opened_at) AS day,
@@ -258,10 +258,20 @@ app.get("/admin/dashboard", authMiddleware, async (c) => {
       avgStreaks: number;
     }>();
 
-    // **Formata os dados para o gráfico com 3 pontos fixos**
+    // **📆 Formatar os dados do gráfico**
     const today = new Date();
+    const past21Days = new Date(today);
+    past21Days.setDate(today.getDate() - 21);
     const past15Days = new Date(today);
     past15Days.setDate(today.getDate() - 15);
+    const past10Days = new Date(today);
+    past10Days.setDate(today.getDate() - 10);
+    const past7Days = new Date(today);
+    past7Days.setDate(today.getDate() - 7);
+    const past3Days = new Date(today);
+    past3Days.setDate(today.getDate() - 3);
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
     const past30Days = new Date(today);
     past30Days.setDate(today.getDate() - 30);
 
@@ -272,11 +282,16 @@ app.get("/admin/dashboard", authMiddleware, async (c) => {
 
     const formattedEngagementData = [
       { name: past30Days.toISOString().split("T")[0], uv: getMetric(past30Days).totalOpens, pv: getMetric(past30Days).avgStreaks, amt: getMetric(past30Days).totalOpens },
+      { name: past21Days.toISOString().split("T")[0], uv: getMetric(past21Days).totalOpens, pv: getMetric(past21Days).avgStreaks, amt: getMetric(past21Days).totalOpens },
       { name: past15Days.toISOString().split("T")[0], uv: getMetric(past15Days).totalOpens, pv: getMetric(past15Days).avgStreaks, amt: getMetric(past15Days).totalOpens },
+      { name: past10Days.toISOString().split("T")[0], uv: getMetric(past10Days).totalOpens, pv: getMetric(past10Days).avgStreaks, amt: getMetric(past10Days).totalOpens },
+      { name: past7Days.toISOString().split("T")[0], uv: getMetric(past7Days).totalOpens, pv: getMetric(past7Days).avgStreaks, amt: getMetric(past7Days).totalOpens },
+      { name: past3Days.toISOString().split("T")[0], uv: getMetric(past3Days).totalOpens, pv: getMetric(past3Days).avgStreaks, amt: getMetric(past3Days).totalOpens },
+      { name: yesterday.toISOString().split("T")[0], uv: getMetric(yesterday).totalOpens, pv: getMetric(yesterday).avgStreaks, amt: getMetric(yesterday).totalOpens },
       { name: today.toISOString().split("T")[0], uv: getMetric(today).totalOpens, pv: getMetric(today).avgStreaks, amt: getMetric(today).totalOpens }
     ];
 
-    // **Retorno estruturado**
+    // **📊 Retorno estruturado para o frontend**
     return c.json({
       message: "Dados do dashboard obtidos com sucesso!",
       totalUsers: stats?.totalUsers || 0,
@@ -284,13 +299,14 @@ app.get("/admin/dashboard", authMiddleware, async (c) => {
       avgStreaks: stats?.avgStreaks || 0,
       retentionRate: stats?.retentionRate?.toFixed(2) || "0.00%",
       topUsers: ranking.results || [],
-      engagementData: formattedEngagementData, // 🚀 Agora no formato correto!
+      engagementData: formattedEngagementData,
     });
   } catch (error) {
     console.error("Erro ao buscar dados do dashboard:", error);
     return c.json({ error: "Erro interno ao buscar dados." }, 500);
   }
 });
+
 
 
 
