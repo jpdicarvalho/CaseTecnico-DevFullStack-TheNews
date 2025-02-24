@@ -67,7 +67,7 @@ app.get("/webhook/newsletter-open", async (c) => {
         .bind(id, user.id, new Date().toISOString()).run();
     }
 
-    console.log(`✅ Webhook processado: email=${user.email}, id=${id}`);
+    console.log(`Webhook processado: email=${user.email}, id=${id}`);
 
     return c.json({
       message: "Webhook recebido e processado com sucesso!",
@@ -76,7 +76,7 @@ app.get("/webhook/newsletter-open", async (c) => {
       lastOpened: user.last_opened,
     }, 200);
   } catch (error) {
-    console.error("❌ Erro ao processar webhook:", error);
+    console.error("Erro ao processar webhook:", error);
     return c.json({ error: "Erro interno ao processar webhook." }, 500);
   }
 });
