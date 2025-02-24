@@ -81,7 +81,6 @@ app.get("/webhook/newsletter-open", async (c) => {
   }
 });
 
-
 // Login via e-mail (sem senha)
 app.post("/auth/login", async (c) => {
   try {

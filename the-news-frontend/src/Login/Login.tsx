@@ -28,6 +28,9 @@ function Login() {
 
             setTimeout(() => {
                 setIsLoading(false)
+                if(email === 'admin@admin.com'){
+                    return navigate('/admin/dashboard');
+                }
                 navigate('/Home');
             }, 2000);
 
