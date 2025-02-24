@@ -185,10 +185,10 @@ app.get("/admin/dashboard", authMiddleware, async (c) => {
   try {
     const db = c.env.DB;
 
-    // Captura os filtros enviados na URL (se não forem passados, usa os padrões)
-    const period = c.req.query("period"); // Padrão: últimos 30 dias (720 horas)
-    const status = c.req.query("streakStatus"); // Padrão: Streaks Ativos
-    const newsletterId = c.req.query("newsletterId"); // Opcional
+    // Captura os filtros enviados na URL
+    const period = c.req.query("period");
+    const status = c.req.query("streakStatus");
+    const newsletterId = c.req.query("newsletterId");
 
     // Parâmetros para a query SQL
     const params: string[] = [];
