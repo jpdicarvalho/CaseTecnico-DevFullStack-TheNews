@@ -72,12 +72,11 @@ const filteringNewsletters = [
  ];
 
 const filteringPeriod = [
-    { value: 24, label: "Últimas 24 horas" },
-    { value: 48, label: "Últimos 2 dias" },
-    { value: 72, label: "Últimos 3 dias" },
-    { value: 168, label: "Últimos 7 dias" },
-    { value: 336, label: "Últimos 14 dias" },
-    { value: 720, label: "Últimos 30 dias" },
+    { value: 24, label: "Últimas 7 dias" },
+    { value: 48, label: "Últimos 15 dias" },
+    { value: 72, label: "Últimos 20 dias" },
+    { value: 168, label: "Últimos 25 dias" },
+    { value: 336, label: "Últimos 30 dias" }
 ];
 
   const Dashboard = () => {

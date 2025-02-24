@@ -186,13 +186,13 @@ app.get("/admin/dashboard", authMiddleware, async (c) => {
     const db = c.env.DB;
 
     // Captura os filtros enviados na URL ou define valores padrão
-    const period = c.req.query("period") || "720"; // Padrão: Últimos 30 dias (720 horas)
+    const period = parseInt(c.req.query("period") || "720", 10); // Padrão: Últimos 30 dias (720 horas)
     const status = c.req.query("streakStatus") || "Ativo"; // Padrão: Streaks ativos
     const newsletterId = c.req.query("newsletterId"); // Opcional
 
     // **Parâmetros e query base**
-    const params: string[] = [];
-    let whereConditions = "1=1"; 
+    const params = [];
+    let whereConditions = "1=1";
 
     // **Filtro por período de tempo**
     whereConditions += " AND newsletters.opened_at >= DATETIME('now', ? || ' hours')";
@@ -211,7 +211,7 @@ app.get("/admin/dashboard", authMiddleware, async (c) => {
       params.push(newsletterId);
     }
 
-    // **📊 Estatísticas Gerais**
+    // **Estatísticas Gerais**
     const statsQuery = `
       SELECT 
         (SELECT COUNT(*) FROM users) AS totalUsers,
@@ -224,23 +224,18 @@ app.get("/admin/dashboard", authMiddleware, async (c) => {
           WHERE users.last_opened >= DATE('now', '-30 days')
         ) AS retentionRate
     `;
-    const stats = await db.prepare(statsQuery).first<{
-      totalUsers: number;
-      openNewsletters: number;
-      avgStreaks: number;
-      retentionRate: number;
-    }>();
+    const stats = await db.prepare(statsQuery).first();
 
-    // **🏆 Ranking dos 10 usuários mais engajados**
+    // **Ranking dos 10 usuários mais engajados**
     const rankingQuery = `
       SELECT email, streak, last_opened
       FROM users
       ORDER BY streak DESC
       LIMIT 10
     `;
-    const ranking = await db.prepare(rankingQuery).all<{ email: string; streak: number; last_opened: string }>();
+    const ranking = await db.prepare(rankingQuery).all();
 
-    // **📈 Engajamento ao longo do tempo**
+    // **Engajamento ao longo do tempo**
     const engagementQuery = `
       SELECT 
         DATE(newsletters.opened_at) AS day,
@@ -252,52 +247,40 @@ app.get("/admin/dashboard", authMiddleware, async (c) => {
       GROUP BY day
       ORDER BY day
     `;
-    const engagementResults = await db.prepare(engagementQuery).bind(...params).all<{
-      day: string;
-      totalOpens: number;
-      avgStreaks: number;
-    }>();
+    const engagementResults = await db.prepare(engagementQuery).bind(...params).all();
 
-    // **📆 Formatar os dados do gráfico**
+    // **Formatar os dados do gráfico**
     const today = new Date();
-    const past21Days = new Date(today);
-    past21Days.setDate(today.getDate() - 21);
-    const past15Days = new Date(today);
-    past15Days.setDate(today.getDate() - 15);
-    const past10Days = new Date(today);
-    past10Days.setDate(today.getDate() - 10);
-    const past7Days = new Date(today);
-    past7Days.setDate(today.getDate() - 7);
-    const past3Days = new Date(today);
-    past3Days.setDate(today.getDate() - 3);
-    const yesterday = new Date(today);
-    yesterday.setDate(today.getDate() - 1);
-    const past30Days = new Date(today);
-    past30Days.setDate(today.getDate() - 30);
+    const startDate = new Date(today);
+    startDate.setDate(today.getDate() - (period / 24)); // Convertendo de horas para dias
 
-    const getMetric = (date: Date) => {
-      const formattedDate = date.toISOString().split("T")[0];
-      return engagementResults.results.find((entry) => entry.day === formattedDate) || { totalOpens: 0, avgStreaks: 0 };
+    // Gera 7 intervalos distribuídos no período selecionado
+    const interval = Math.ceil((period / 24) / 6); // Divide o período em 6 partes para formar 7 pontos (6 intervalos)
+    const dates = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - (i * interval));
+      dates.push(date.toISOString().split("T")[0]); // Formatando como YYYY-MM-DD
+    }
+
+    const getMetric = (dateStr: string) => {
+      return engagementResults.results.find((entry: any) => entry.day === dateStr) || { totalOpens: 0, avgStreaks: 0 };
     };
 
-    const formattedEngagementData = [
-      { name: past30Days.toISOString().split("T")[0], uv: getMetric(past30Days).totalOpens, pv: getMetric(past30Days).avgStreaks, amt: getMetric(past30Days).totalOpens },
-      { name: past21Days.toISOString().split("T")[0], uv: getMetric(past21Days).totalOpens, pv: getMetric(past21Days).avgStreaks, amt: getMetric(past21Days).totalOpens },
-      { name: past15Days.toISOString().split("T")[0], uv: getMetric(past15Days).totalOpens, pv: getMetric(past15Days).avgStreaks, amt: getMetric(past15Days).totalOpens },
-      { name: past10Days.toISOString().split("T")[0], uv: getMetric(past10Days).totalOpens, pv: getMetric(past10Days).avgStreaks, amt: getMetric(past10Days).totalOpens },
-      { name: past7Days.toISOString().split("T")[0], uv: getMetric(past7Days).totalOpens, pv: getMetric(past7Days).avgStreaks, amt: getMetric(past7Days).totalOpens },
-      { name: past3Days.toISOString().split("T")[0], uv: getMetric(past3Days).totalOpens, pv: getMetric(past3Days).avgStreaks, amt: getMetric(past3Days).totalOpens },
-      { name: yesterday.toISOString().split("T")[0], uv: getMetric(yesterday).totalOpens, pv: getMetric(yesterday).avgStreaks, amt: getMetric(yesterday).totalOpens },
-      { name: today.toISOString().split("T")[0], uv: getMetric(today).totalOpens, pv: getMetric(today).avgStreaks, amt: getMetric(today).totalOpens }
-    ];
+    const formattedEngagementData = dates.map((date) => ({
+      name: date,
+      uv: getMetric(date).totalOpens,
+      pv: getMetric(date).avgStreaks,
+      amt: getMetric(date).totalOpens
+    }));
 
-    // **📊 Retorno estruturado para o frontend**
+    // **Retorno estruturado para o frontend**
     return c.json({
       message: "Dados do dashboard obtidos com sucesso!",
       totalUsers: stats?.totalUsers || 0,
       openNewsletters: stats?.openNewsletters || 0,
       avgStreaks: stats?.avgStreaks || 0,
-      retentionRate: stats?.retentionRate?.toFixed(2) || "0.00%",
+      retentionRate: typeof stats?.retentionRate === "number" ? stats.retentionRate.toFixed(2) : "0.00%",
       topUsers: ranking.results || [],
       engagementData: formattedEngagementData,
     });
@@ -306,8 +289,6 @@ app.get("/admin/dashboard", authMiddleware, async (c) => {
     return c.json({ error: "Erro interno ao buscar dados." }, 500);
   }
 });
-
-
 
 
 // Função para verificar se a abertura foi consecutiva
