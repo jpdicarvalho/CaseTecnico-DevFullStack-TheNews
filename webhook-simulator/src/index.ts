@@ -4,11 +4,17 @@ const app = new Hono();
 
 const TARGET_API = "https://the-news-api.joaopedrobraga-07.workers.dev/webhook/newsletter-open";
 
-// Função para gerar e-mails aleatórios
+// Função para gerar e-mails com nomes de pessoas reais
 const generateRandomEmail = () => {
-  const domains = ["email.com", "teste.com", "newsletter.com"];
-  const user = Math.random().toString(36).substring(2, 10);
-  return `${user}@${domains[Math.floor(Math.random() * domains.length)]}`;
+	const firstNames = ["João", "Maria", "Carlos", "Ana", "Pedro", "Lucas", "Mariana", "Fernanda"];
+	const lastNames = ["Silva", "Souza", "Costa", "Pereira", "Oliveira", "Santos", "Lima", "Gomes"];
+  
+	const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+	const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+  
+	// Converte os nomes para minúsculas e os combina com um ponto
+	const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}@teste.com`;
+	return email;
 };
 
 // Função para gerar IDs aleatórios de newsletters
