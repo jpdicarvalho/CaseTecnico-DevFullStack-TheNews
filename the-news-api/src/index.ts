@@ -240,14 +240,31 @@ app.get("/admin/dashboard", authMiddleware, async (c) => {
     `;
     const ranking = await db.prepare(rankingQuery).all<{ email: string; streak: number; last_opened: string }>();
 
-    // **3️⃣ Estatísticas de engajamento filtradas**
-    const filteredQuery = `
-      SELECT users.email, users.streak, users.last_opened, newsletters.id as newsletter_id, newsletters.opened_at
+    // **3️⃣ Estatísticas de engajamento filtradas (para alimentar o gráfico)**
+    const engagementQuery = `
+      SELECT 
+        DATE(newsletters.opened_at) AS day,
+        COUNT(newsletters.id) AS totalOpens,
+        ROUND(AVG(users.streak), 2) AS avgStreaks
       FROM users
       INNER JOIN newsletters ON users.id = newsletters.user_id
       WHERE ${whereConditions}
+      GROUP BY day
+      ORDER BY day
     `;
-    const filteredResults = await db.prepare(filteredQuery).bind(...params).all();
+    const engagementResults = await db.prepare(engagementQuery).bind(...params).all<{
+      day: string;
+      totalOpens: number;
+      avgStreaks: number;
+    }>();
+
+    // **📌 Formata os dados para o gráfico**
+    const formattedEngagementData = engagementResults.results.map((entry) => ({
+      name: entry.day,
+      uv: entry.totalOpens, // Total de aberturas de newsletters
+      pv: entry.avgStreaks, // Média de streaks no dia
+      amt: entry.totalOpens, // Pode ser duplicado caso precise para algum gráfico específico
+    }));
 
     // **📌 Retorno estruturado**
     return c.json({
@@ -257,13 +274,14 @@ app.get("/admin/dashboard", authMiddleware, async (c) => {
       avgStreaks: stats?.avgStreaks || 0,
       retentionRate: stats?.retentionRate?.toFixed(2) || "0.00%",
       topUsers: ranking.results || [],
-      filteredResults: filteredResults.results || [],
+      engagementData: formattedEngagementData, // 🚀 Agora no formato correto!
     });
   } catch (error) {
     console.error("Erro ao buscar dados do dashboard:", error);
     return c.json({ error: "Erro interno ao buscar dados." }, 500);
   }
 });
+
 
 // Função para verificar se a abertura foi consecutiva
 function checkIfConsecutive(lastOpened: string | null, today: Date): boolean {

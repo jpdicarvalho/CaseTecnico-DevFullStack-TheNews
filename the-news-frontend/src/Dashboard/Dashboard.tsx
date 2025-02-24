@@ -15,7 +15,7 @@ import './Dashboard.css'
 
   const data2 = [
     {
-      name: 'Page A',
+      name: '',
       uv: 4000,
       pv: 2400,
       amt: 2400,
@@ -256,7 +256,7 @@ const filteringPeriod = [
               </button>
             </div>
 
-            <div className='section__grafics__and__ranking'>
+            <div className='section__grafics'>
                 {/* Gráfico de Engajamento */}
                 <div className='box__grafics'>
                     <h3>Distribuição de streaks</h3>
@@ -270,7 +270,7 @@ const filteringPeriod = [
                     </ResponsiveContainer>
                 </div>
                 <div className='box__grafics'>
-                    <h3>📈 Engajamento ao longo do tempo</h3>
+                    <h3>Engajamento ao longo do tempo</h3>
                     <ResponsiveContainer width="100%" height={300}>
                         <AreaChart
                             width={500}
