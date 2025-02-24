@@ -71,12 +71,12 @@ const filteringNewsletters = [
     { value: "post_123460", label: "Newsletter - Edição #5" },
  ];
 
-const filteringPeriod = [
-    { value: 24, label: "Últimas 7 dias" },
-    { value: 48, label: "Últimos 15 dias" },
-    { value: 72, label: "Últimos 20 dias" },
-    { value: 168, label: "Últimos 25 dias" },
-    { value: 336, label: "Últimos 30 dias" }
+ const filteringPeriod = [
+  { value: 168, label: "Últimos 7 dias" },  // 7 dias * 24 horas
+  { value: 360, label: "Últimos 15 dias" }, // 15 dias * 24 horas
+  { value: 480, label: "Últimos 20 dias" }, // 20 dias * 24 horas
+  { value: 600, label: "Últimos 25 dias" }, // 25 dias * 24 horas
+  { value: 720, label: "Últimos 30 dias" }  // 30 dias * 24 horas
 ];
 
   const Dashboard = () => {

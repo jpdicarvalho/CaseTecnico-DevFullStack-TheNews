@@ -185,13 +185,13 @@ app.get("/admin/dashboard", authMiddleware, async (c) => {
   try {
     const db = c.env.DB;
 
-    // Captura os filtros enviados na URL ou define valores padrão
+    // Captura os filtros da URL ou define valores padrão
     const period = parseInt(c.req.query("period") || "720", 10); // Padrão: Últimos 30 dias (720 horas)
     const status = c.req.query("streakStatus") || "Ativo"; // Padrão: Streaks ativos
     const newsletterId = c.req.query("newsletterId"); // Opcional
 
-    // **Parâmetros e query base**
-    const params = [];
+    // **Parâmetros SQL**
+    const params: string[] = [];
     let whereConditions = "1=1";
 
     // **Filtro por período de tempo**
@@ -205,7 +205,7 @@ app.get("/admin/dashboard", authMiddleware, async (c) => {
       whereConditions += " AND users.streak = 1 AND users.last_opened < DATE('now', '-7 days')";
     }
 
-    // **Filtro por newsletter específica (se informado)**
+    // **Filtro por newsletter específica**
     if (newsletterId) {
       whereConditions += " AND newsletters.id = ?";
       params.push(newsletterId);
@@ -249,24 +249,26 @@ app.get("/admin/dashboard", authMiddleware, async (c) => {
     `;
     const engagementResults = await db.prepare(engagementQuery).bind(...params).all();
 
-    // **Formatar os dados do gráfico**
+    // **Geração dos intervalos do gráfico**
     const today = new Date();
     const startDate = new Date(today);
     startDate.setDate(today.getDate() - (period / 24)); // Convertendo de horas para dias
 
-    // Gera 7 intervalos distribuídos no período selecionado
+    // **Gera 7 intervalos distribuídos no período selecionado**
     const interval = Math.ceil((period / 24) / 6); // Divide o período em 6 partes para formar 7 pontos (6 intervalos)
     const dates = [];
     for (let i = 6; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(today.getDate() - (i * interval));
-      dates.push(date.toISOString().split("T")[0]); // Formatando como YYYY-MM-DD
+      dates.push(date.toISOString().split("T")[0]); // Formato YYYY-MM-DD
     }
 
+    // **Busca os valores corretos para cada data**
     const getMetric = (dateStr: string) => {
       return engagementResults.results.find((entry: any) => entry.day === dateStr) || { totalOpens: 0, avgStreaks: 0 };
     };
 
+    // **Estrutura final do gráfico**
     const formattedEngagementData = dates.map((date) => ({
       name: date,
       uv: getMetric(date).totalOpens,
@@ -274,7 +276,7 @@ app.get("/admin/dashboard", authMiddleware, async (c) => {
       amt: getMetric(date).totalOpens
     }));
 
-    // **Retorno estruturado para o frontend**
+    // **Retorno formatado para o frontend**
     return c.json({
       message: "Dados do dashboard obtidos com sucesso!",
       totalUsers: stats?.totalUsers || 0,
